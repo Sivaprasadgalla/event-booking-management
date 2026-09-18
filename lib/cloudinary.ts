@@ -1,67 +1,131 @@
-// Cloudinary image handler and high-quality photography fallbacks
+import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
 
-export const EVENT_IMAGE_PRESETS = [
-  {
-    category: "Music & Concerts",
-    url: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1200&q=80",
-    label: "Live Stadium Festival",
-  },
-  {
-    category: "Technology & Conferences",
-    url: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=80",
-    label: "Tech Keynote Stage",
-  },
-  {
-    category: "Food & Drinks",
-    url: "https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=1200&q=80",
-    label: "Gourmet Food Festival",
-  },
-  {
-    category: "Workshops & Masterclasses",
-    url: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1200&q=80",
-    label: "Interactive Workshop",
-  },
-  {
-    category: "Fitness & Wellness",
-    url: "https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=1200&q=80",
-    label: "Sunrise Yoga Retreat",
-  },
-  {
-    category: "Arts & Theatre",
-    url: "https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=1200&q=80",
-    label: "Theatre Performance",
-  },
-  {
-    category: "Nightlife & Parties",
-    url: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1200&q=80",
-    label: "DJ Club Night",
-  },
-];
+// Initialize Cloudinary v2 configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true,
+});
 
-export async function uploadImageToCloudinary(fileBase64: string): Promise<string> {
-  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-  const apiKey = process.env.CLOUDINARY_API_KEY;
+export { cloudinary };
+export { EVENT_IMAGE_PRESETS } from "./presets";
 
-  // If Cloudinary keys are not provided, return the base64 string directly or a fallback
-  if (!cloudName || !apiKey) {
-    // Return base64 or preset
+/**
+ * Clean user names into valid Cloudinary folder paths
+ */
+export function sanitizeFolderName(name: string): string {
+  if (!name) return "unnamed_user";
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]/g, "_")
+    .replace(/_+/g, "_");
+}
+
+/**
+ * Resolves each organiser's dedicated Cloudinary media folder using their Name and Unique ID.
+ * Folder structure in Cloudinary:
+ * celebratehub/organisers/{organiser_name}_{organiser_id}/{mediaType}
+ */
+export function getOrganizerMediaFolder(
+  user: { id: string; name: string; role?: string },
+  mediaType: "events" | "gallery" | "profile" = "events"
+): string {
+  const sanitized = sanitizeFolderName(user.name);
+  const userId = user.id || "anonymous";
+
+  if (user.role === "organiser") {
+    return `celebratehub/organisers/${sanitized}_${userId}/${mediaType}`;
+  } else if (user.role === "admin") {
+    return `celebratehub/admin/${sanitized}_${userId}/${mediaType}`;
+  }
+  return `celebratehub/customers/${sanitized}_${userId}/${mediaType}`;
+}
+
+/**
+ * Check if Cloudinary environment variables are configured
+ */
+export function isCloudinaryConfigured(): boolean {
+  return Boolean(
+    process.env.CLOUDINARY_CLOUD_NAME &&
+      process.env.CLOUDINARY_API_KEY &&
+      process.env.CLOUDINARY_API_SECRET
+  );
+}
+
+/**
+ * Upload a Buffer directly to Cloudinary into a dedicated folder
+ */
+export async function uploadBufferToCloudinary(
+  buffer: Buffer,
+  folder: string,
+  options: {
+    publicId?: string;
+    transformation?: any[];
+  } = {}
+): Promise<{ url: string; publicId: string; folder: string }> {
+  if (!isCloudinaryConfigured()) {
+    console.warn(
+      "[Cloudinary] Credentials not configured in .env.local. Falling back to data URI preview."
+    );
+    // Base64 fallback for local development without credentials
+    const base64 = buffer.toString("base64");
+    const dataUri = `data:image/jpeg;base64,${base64}`;
+    return {
+      url: dataUri,
+      publicId: `mock_${Date.now()}`,
+      folder,
+    };
+  }
+
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        public_id: options.publicId,
+        resource_type: "image",
+        transformation: options.transformation || [
+          { quality: "auto", fetch_format: "auto" },
+        ],
+      },
+      (error, result: UploadApiResponse | undefined) => {
+        if (error || !result) {
+          console.error("[Cloudinary Upload Error]", error);
+          return reject(error || new Error("Cloudinary upload failed"));
+        }
+        resolve({
+          url: result.secure_url,
+          publicId: result.public_id,
+          folder,
+        });
+      }
+    );
+
+    uploadStream.end(buffer);
+  });
+}
+
+/**
+ * Legacy wrapper for base64 strings
+ */
+export async function uploadImageToCloudinary(
+  fileBase64: string,
+  folder: string = "celebratehub/general"
+): Promise<string> {
+  if (!isCloudinaryConfigured()) {
     return fileBase64;
   }
 
   try {
-    const formData = new FormData();
-    formData.append("file", fileBase64);
-    formData.append("upload_preset", "eventhub_default");
-
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-      method: "POST",
-      body: formData,
+    const res = await cloudinary.uploader.upload(fileBase64, {
+      folder,
+      resource_type: "image",
+      transformation: [{ quality: "auto", fetch_format: "auto" }],
     });
-
-    const data = await res.json();
-    return data.secure_url || fileBase64;
+    return res.secure_url;
   } catch (error) {
-    console.error("Cloudinary upload failed, using local fallback", error);
+    console.error("Cloudinary base64 upload failed:", error);
     return fileBase64;
   }
 }

@@ -11,6 +11,8 @@ export interface IUser extends Document {
   companyName?: string;
   isVerified: boolean;
   status: "active" | "suspended";
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -31,6 +33,8 @@ const UserSchema = new Schema<IUser>(
     companyName: { type: String, default: "" },
     isVerified: { type: Boolean, default: false },
     status: { type: String, enum: ["active", "suspended"], default: "active" },
+    resetPasswordToken: { type: String, select: false },
+    resetPasswordExpires: { type: Date, select: false },
   },
   { timestamps: true }
 );

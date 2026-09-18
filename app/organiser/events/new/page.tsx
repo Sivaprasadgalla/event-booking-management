@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
-import { EVENT_IMAGE_PRESETS } from "@/lib/cloudinary";
+import { EVENT_IMAGE_PRESETS } from "@/lib/presets";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
@@ -26,6 +26,10 @@ import {
   Moon,
   Coffee,
   Check,
+  UploadCloud,
+  Image as ImageIcon,
+  X,
+  Loader2,
 } from "lucide-react";
 
 const VENUE_TYPES = [
@@ -72,6 +76,8 @@ export default function CreateEventWizardPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -220,6 +226,90 @@ export default function CreateEventWizardPage() {
         : [...prev.customOperatingDays, dayNum].sort((a, b) => a - b);
       return { ...prev, customOperatingDays: updated };
     });
+  };
+
+  // Cloudinary Upload Handlers
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file (PNG, JPG, WEBP).");
+      return;
+    }
+
+    try {
+      setUploadingCover(true);
+      const data = new FormData();
+      data.append("file", file);
+      data.append("type", "events");
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: data,
+      });
+      const json = await res.json();
+
+      if (res.ok && json.url) {
+        setFormData((prev) => ({ ...prev, coverImage: json.url }));
+        toast.success(
+          `Cover image uploaded to your Cloudinary folder (${json.folder})!`,
+          "Cover Uploaded"
+        );
+      } else {
+        toast.error(json.error || "Failed to upload image", "Upload Error");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("An error occurred during image upload.");
+    } finally {
+      setUploadingCover(false);
+    }
+  };
+
+  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    try {
+      setUploadingGallery(true);
+      const data = new FormData();
+      for (let i = 0; i < files.length; i++) {
+        data.append("files", files[i]);
+      }
+      data.append("type", "gallery");
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: data,
+      });
+      const json = await res.json();
+
+      if (res.ok && json.urls) {
+        setFormData((prev) => ({
+          ...prev,
+          gallery: [...prev.gallery, ...json.urls],
+        }));
+        toast.success(
+          `${json.count} photo(s) uploaded to your dedicated Cloudinary gallery folder!`,
+          "Gallery Uploaded"
+        );
+      } else {
+        toast.error(json.error || "Failed to upload gallery images", "Upload Error");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("An error occurred during gallery upload.");
+    } finally {
+      setUploadingGallery(false);
+    }
+  };
+
+  const removeGalleryImage = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      gallery: prev.gallery.filter((_, idx) => idx !== index),
+    }));
   };
 
   // Daily Shift helpers
@@ -1125,47 +1215,151 @@ export default function CreateEventWizardPage() {
 
         {/* Step 5: Media & Submit */}
         {currentStep === 5 && (
-          <div className="bg-slate-900/60 backdrop-blur-xl rounded-3xl border border-white/10 p-6 sm:p-8 space-y-6 shadow-2xl">
+          <div className="bg-slate-900/60 backdrop-blur-xl rounded-3xl border border-white/10 p-6 sm:p-8 space-y-8 shadow-2xl">
             <div>
-              <h2 className="text-lg font-bold text-white">Cover Photography & Review</h2>
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <UploadCloud className="w-5 h-5 text-amber-400" />
+                <span>Venue Imagery, Gallery & Review</span>
+              </h2>
               <p className="text-xs text-slate-400 mt-0.5">
-                Select high-definition cover imagery showcasing your venue ambiance.
+                Upload your high-definition cover photography and atmospheric gallery photos directly to your dedicated Cloudinary organizer folder.
               </p>
             </div>
 
-            {/* Presets */}
-            <div className="space-y-3">
-              <label className="text-xs font-semibold text-slate-300 block">
-                Choose High-Definition Preset or Enter Custom Image URL
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {EVENT_IMAGE_PRESETS.map((preset, idx) => (
-                  <div
-                    key={idx}
-                    onClick={() => setFormData({ ...formData, coverImage: preset.url })}
-                    className={`cursor-pointer rounded-2xl overflow-hidden border-2 transition relative ${
-                      formData.coverImage === preset.url
-                        ? "border-purple-500 ring-2 ring-purple-400/50 scale-[1.02]"
-                        : "border-white/10 opacity-60 hover:opacity-100"
-                    }`}
-                  >
-                    <img src={preset.url} alt={preset.label} className="w-full h-24 object-cover" />
-                    <div className="p-2 bg-slate-950/80 text-[11px] font-semibold text-white text-center truncate">
-                      {preset.label}
-                    </div>
-                  </div>
-                ))}
+            {/* Cloudinary Cover Photo */}
+            <div className="space-y-4 p-5 rounded-2xl bg-white/5 border border-white/10">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <label className="text-xs font-bold text-white block uppercase tracking-wider">
+                    Primary Cover Photo *
+                  </label>
+                  <span className="text-[11px] text-slate-400">
+                    Main header visual displayed across the marketplace and search results.
+                  </span>
+                </div>
+
+                <label className="cursor-pointer px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold transition flex items-center gap-1.5 shrink-0 self-start sm:self-auto shadow-md shadow-amber-400/20">
+                  {uploadingCover ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading to Cloudinary...
+                    </>
+                  ) : (
+                    <>
+                      <UploadCloud className="w-3.5 h-3.5" /> Upload Cover Photo
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleCoverUpload}
+                    disabled={uploadingCover}
+                    className="hidden"
+                  />
+                </label>
               </div>
 
-              <div className="space-y-1 pt-2">
-                <label className="text-xs font-medium text-slate-400">Cover Image URL</label>
-                <input
-                  type="url"
-                  value={formData.coverImage}
-                  onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs outline-none focus:border-purple-500"
-                />
+              {formData.coverImage && (
+                <div className="relative rounded-2xl overflow-hidden border border-white/10 h-48 sm:h-64 bg-slate-950 group">
+                  <img
+                    src={formData.coverImage}
+                    alt="Cover preview"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4">
+                    <span className="text-[11px] text-amber-300 font-mono bg-black/60 px-2.5 py-1 rounded-lg border border-white/10">
+                      Active Cover Photo
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Presets Option */}
+              <div className="space-y-2 pt-2 border-t border-white/10">
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+                  Or Pick a Curated High-Definition Preset
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  {EVENT_IMAGE_PRESETS.slice(0, 4).map((preset, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => setFormData({ ...formData, coverImage: preset.url })}
+                      className={`cursor-pointer rounded-xl overflow-hidden border transition relative ${
+                        formData.coverImage === preset.url
+                          ? "border-amber-400 ring-2 ring-amber-400/40 scale-[1.02]"
+                          : "border-white/10 opacity-60 hover:opacity-100"
+                      }`}
+                    >
+                      <img src={preset.url} alt={preset.label} className="w-full h-16 object-cover" />
+                      <div className="p-1.5 bg-slate-950/90 text-[10px] font-semibold text-white text-center truncate">
+                        {preset.label}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
+            </div>
+
+            {/* Cloudinary Multi-Image Event Gallery */}
+            <div className="space-y-4 p-5 rounded-2xl bg-white/5 border border-white/10">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <label className="text-xs font-bold text-white block uppercase tracking-wider">
+                    Venue Photo Gallery ({formData.gallery.length} photos)
+                  </label>
+                  <span className="text-[11px] text-slate-400">
+                    Upload multiple ambiance shots, dining setups, outdoor lawn views, and sound consoles.
+                  </span>
+                </div>
+
+                <label className="cursor-pointer px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition flex items-center gap-1.5 shrink-0 self-start sm:self-auto shadow-md shadow-purple-600/20">
+                  {uploadingGallery ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading Photos...
+                    </>
+                  ) : (
+                    <>
+                      <ImageIcon className="w-3.5 h-3.5" /> Add Gallery Photos
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleGalleryUpload}
+                    disabled={uploadingGallery}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
+              {formData.gallery.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                  {formData.gallery.map((url, idx) => (
+                    <div
+                      key={idx}
+                      className="relative group rounded-xl overflow-hidden border border-white/10 bg-slate-950 aspect-video"
+                    >
+                      <img
+                        src={url}
+                        alt={`Gallery photo ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeGalleryImage(idx)}
+                        className="absolute top-1.5 right-1.5 p-1 rounded-lg bg-black/70 hover:bg-rose-600 text-white transition opacity-80 hover:opacity-100"
+                        title="Remove photo"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="border border-dashed border-white/10 rounded-2xl p-6 text-center text-xs text-slate-400">
+                  No additional gallery photos added yet. Click &ldquo;Add Gallery Photos&rdquo; to upload showcase imagery.
+                </div>
+              )}
             </div>
 
             {/* Moderation Guarantee Card */}

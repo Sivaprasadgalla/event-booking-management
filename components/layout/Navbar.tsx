@@ -197,6 +197,15 @@ export default function Navbar() {
                         <span>My Celebrations & Bookings</span>
                       </Link>
 
+                      <Link
+                        href="/profile"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition"
+                      >
+                        <User className="w-4 h-4 text-sky-400" />
+                        <span>Profile & Settings</span>
+                      </Link>
+
                       <div className="pt-1 border-t border-white/10">
                         <button
                           onClick={() => {
@@ -328,6 +337,15 @@ export default function Navbar() {
                     <span>Admin Command Center</span>
                   </Link>
                 )}
+
+                <Link
+                  href="/profile"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sky-300 bg-sky-500/10 border border-sky-500/20"
+                >
+                  <User className="w-4 h-4" />
+                  <span>My Profile & Settings</span>
+                </Link>
 
                 <button
                   onClick={() => {
