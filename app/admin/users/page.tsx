@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { formatEventDate } from "@/lib/utils";
-import { Users, Search, CheckCircle, XCircle, Shield, AlertTriangle } from "lucide-react";
+import { Users, Search, CheckCircle, XCircle, Shield, AlertTriangle, Trash2, X, AlertCircle } from "lucide-react";
 
 export default function AdminUsersPage() {
   const { user, isLoading } = useAuth();
@@ -17,6 +17,9 @@ export default function AdminUsersPage() {
   const [roleFilter, setRoleFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [deleteTargetUser, setDeleteTargetUser] = useState<any | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [activeBookingsWarning, setActiveBookingsWarning] = useState<number | null>(null);
 
   const fetchUsers = () => {
     setLoading(true);
@@ -69,6 +72,41 @@ export default function AdminUsersPage() {
       toast.error("An unexpected error occurred while updating user status.");
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const handleDeleteUser = async (force: boolean = false) => {
+    if (!deleteTargetUser) return;
+    try {
+      setIsDeleting(true);
+      const url = `/api/admin/users/${deleteTargetUser._id}${force ? "?force=true" : ""}`;
+      const res = await fetch(url, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+
+      if (res.status === 409 && data.hasActiveBookings) {
+        setActiveBookingsWarning(data.activeBookingsCount);
+        toast.warning(
+          `Organizer has ${data.activeBookingsCount} active booking(s). Confirm force deletion to proceed.`,
+          "Active Bookings Detected"
+        );
+        return;
+      }
+
+      if (res.ok) {
+        setUsers((prev) => prev.filter((u) => u._id !== deleteTargetUser._id));
+        toast.success(data.message || "User and associated events deleted successfully.", "User Deleted");
+        setDeleteTargetUser(null);
+        setActiveBookingsWarning(null);
+      } else {
+        toast.error(data.error || "Failed to delete user", "Deletion Failed");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("An unexpected error occurred while deleting user.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -225,17 +263,29 @@ export default function AdminUsersPage() {
 
                     <td className="py-4 px-5 text-right">
                       {u.email !== "admin@celebratehub.com" && u.email !== "admin@eventhub.com" && (
-                        <button
-                          onClick={() => handleToggleStatus(u._id, u.status)}
-                          disabled={updatingId === u._id}
-                          className={`px-3.5 py-1.5 rounded-xl text-xs font-heading font-bold transition ${
-                            u.status === "active"
-                              ? "text-rose-400 hover:bg-rose-500/10 border border-rose-500/30"
-                              : "text-emerald-300 hover:bg-emerald-500/10 border border-emerald-500/30"
-                          }`}
-                        >
-                          {u.status === "active" ? "Suspend" : "Activate"}
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleToggleStatus(u._id, u.status)}
+                            disabled={updatingId === u._id}
+                            className={`px-3.5 py-1.5 rounded-xl text-xs font-heading font-bold transition ${
+                              u.status === "active"
+                                ? "text-rose-400 hover:bg-rose-500/10 border border-rose-500/30"
+                                : "text-emerald-300 hover:bg-emerald-500/10 border border-emerald-500/30"
+                            }`}
+                          >
+                            {u.status === "active" ? "Suspend" : "Activate"}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setDeleteTargetUser(u);
+                              setActiveBookingsWarning(null);
+                            }}
+                            className="p-1.5 rounded-xl text-xs text-rose-400 hover:text-white hover:bg-rose-500/20 border border-rose-500/30 transition"
+                            title="Delete User & Cascaded Events"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -245,6 +295,91 @@ export default function AdminUsersPage() {
           </div>
         )}
       </div>
+
+      {/* Delete User Confirmation Modal */}
+      {deleteTargetUser && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-5">
+            <div className="flex items-start justify-between">
+              <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <button
+                onClick={() => {
+                  setDeleteTargetUser(null);
+                  setActiveBookingsWarning(null);
+                }}
+                className="text-slate-400 hover:text-white p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div>
+              <h3 className="text-xl font-heading font-bold text-white">
+                Delete Account: {deleteTargetUser.name}?
+              </h3>
+              <p className="text-xs text-slate-400 mt-1">
+                Email: <span className="text-slate-300 font-mono">{deleteTargetUser.email}</span> &bull; Role:{" "}
+                <span className="text-amber-400 font-bold uppercase">{deleteTargetUser.role}</span>
+              </p>
+            </div>
+
+            <div className="text-sm text-slate-300 bg-white/5 border border-white/10 rounded-2xl p-4 space-y-2">
+              <p className="font-semibold text-rose-400 flex items-center gap-1.5">
+                <AlertTriangle className="w-4 h-4" /> Permanent Action Warning
+              </p>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Deleting this account will permanently remove this user from the system. If this account is an event
+                organizer, <strong>all of their events and listings will also be permanently deleted</strong>.
+              </p>
+            </div>
+
+            {activeBookingsWarning !== null && activeBookingsWarning > 0 && (
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex gap-3 text-amber-200 text-xs leading-relaxed">
+                <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="text-amber-300 block mb-0.5">Active Confirmed Bookings Detected</strong>
+                  This organizer currently has {activeBookingsWarning} active booking(s). Deleting will disrupt confirmed guest reservations. Click Force Delete below only if you are certain.
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setDeleteTargetUser(null);
+                  setActiveBookingsWarning(null);
+                }}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 rounded-xl border border-white/10 text-slate-300 hover:bg-white/5 text-sm font-semibold transition"
+              >
+                Cancel
+              </button>
+              {activeBookingsWarning !== null && activeBookingsWarning > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteUser(true)}
+                  disabled={isDeleting}
+                  className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-bold shadow-lg shadow-rose-600/30 transition disabled:opacity-50"
+                >
+                  {isDeleting ? "Force Deleting..." : "Force Delete"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteUser(false)}
+                  disabled={isDeleting}
+                  className="flex-1 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-sm font-bold shadow-lg shadow-rose-500/30 transition disabled:opacity-50"
+                >
+                  {isDeleting ? "Deleting..." : "Delete Account"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

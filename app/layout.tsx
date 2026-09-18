@@ -37,14 +37,14 @@ export default function RootLayout({
     <html lang="en" className={`${plusJakartaSans.variable} ${outfit.variable}`}>
       <body className="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased font-sans selection:bg-purple-500 selection:text-white">
         <AuthProvider>
-          <CartProvider>
-            <ToastProvider>
+          <ToastProvider>
+            <CartProvider>
               <Navbar />
               <main className="flex-1">{children}</main>
               <CartDrawer />
               <Footer />
-            </ToastProvider>
-          </CartProvider>
+            </CartProvider>
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>

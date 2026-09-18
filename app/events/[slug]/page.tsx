@@ -30,11 +30,12 @@ export const dynamic = "force-dynamic";
 export default function EventDetailPage() {
   const { slug } = useParams();
   const router = useRouter();
-  const { addItem } = useCart();
+  const { addItem, sessionId } = useCart();
   const { toast } = useToast();
 
   const [event, setEvent] = useState<any>(null);
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
+  const [activeHolds, setActiveHolds] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState<string>("");
 
@@ -62,6 +63,7 @@ export default function EventDetailPage() {
         if (data.event) {
           setEvent(data.event);
           setReviews(data.reviews || []);
+          setActiveHolds(data.activeHolds || []);
           setActiveImage(data.event.coverImage);
 
           // Default package
@@ -137,7 +139,7 @@ export default function EventDetailPage() {
     }));
   };
 
-  const handleAddToCart = (instantCheckout = false) => {
+  const handleAddToCart = async (instantCheckout = false) => {
     if (!selectedPackage || !selectedSlot) {
       toast.warning(
         "Please choose a celebration package, date, and hosting time slot first.",
@@ -146,7 +148,7 @@ export default function EventDetailPage() {
       return;
     }
 
-    addItem({
+    const holdResult = await addItem({
       eventId: event._id,
       eventTitle: event.title,
       eventSlug: event.slug,
@@ -169,8 +171,25 @@ export default function EventDetailPage() {
       selectedAddOns: addOnsList,
     });
 
+    if (!holdResult.success) {
+      toast.error(
+        holdResult.error || "This time slot is currently reserved by another guest in their cart.",
+        "Slot Unavailable"
+      );
+      // Refresh active holds to show lock status
+      fetch(`/api/events/${slug}`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.activeHolds) setActiveHolds(d.activeHolds);
+        });
+      return;
+    }
+
     setBookingNotice(true);
-    toast.success(`"${event.title}" added to your celebration cart!`, "Added to Cart");
+    toast.success(
+      `"${event.title}" locked in your cart for 10 minutes!`,
+      "Shift Reserved"
+    );
     setTimeout(() => setBookingNotice(false), 3000);
 
     if (instantCheckout) {
@@ -314,6 +333,8 @@ export default function EventDetailPage() {
               customOperatingDays={event.customOperatingDays}
               dailyTimeSlots={event.dailyTimeSlots}
               scheduleSlots={event.scheduleSlots}
+              activeHolds={activeHolds}
+              clientSessionId={sessionId}
               selectedDate={selectedDate}
               selectedSlotId={selectedSlot?.slotId || ""}
               onSelectDate={(d) => {
@@ -453,7 +474,7 @@ export default function EventDetailPage() {
                     <CalendarIcon className="w-4 h-4 text-purple-400" />
                     <span>{formatEventDate(selectedSlot.date, "EEE, dd MMM yyyy")}</span>
                   </div>
-                  <div className="text-purple-300 font-medium flex items-center gap-2 pl-6 pt-0.5 text-xs">
+                  <div className="text-purple-300 font-medium flex items-center gap-2 pt-0.5 text-xs">
                     <Clock className="w-3.5 h-3.5 text-purple-400" />
                     <span>
                       {selectedSlot.title} ({selectedSlot.startTime} – {selectedSlot.endTime})

@@ -19,6 +19,7 @@ import {
   Building2,
   PartyPopper,
 } from "lucide-react";
+import ReservationTimer from "./ReservationTimer";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -91,7 +92,10 @@ export default function Navbar() {
           </nav>
 
           {/* Right Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* 10-Minute Reservation Hold Timer */}
+            <ReservationTimer />
+
             {/* Cart Button */}
             <button
               onClick={openDrawer}
@@ -100,7 +104,7 @@ export default function Navbar() {
             >
               <ShoppingCart className="w-4 h-4" />
               {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-[10px] w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-lg shadow-purple-900/50">
+                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-[10px] w-4 h-4 rounded-full flex items-center justify-center shadow-lg shadow-purple-900/50">
                   {itemCount}
                 </span>
               )}

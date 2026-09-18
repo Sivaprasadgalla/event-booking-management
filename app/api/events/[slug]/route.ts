@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
-import { Event, Review, Category, User } from "@/models";
+import { Event, Review, Category, User, SlotHold } from "@/models";
 import { getUserFromRequest } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +33,16 @@ export async function GET(
       .sort({ createdAt: -1 })
       .lean();
 
-    return NextResponse.json({ event, reviews });
+    // Fetch active slot holds (currently in other customers' carts)
+    const now = new Date();
+    const activeHolds = await SlotHold.find({
+      eventId: event._id,
+      expiresAt: { $gt: now },
+    })
+      .select("slotId date sessionId guestsCount expiresAt")
+      .lean();
+
+    return NextResponse.json({ event, reviews, activeHolds });
   } catch (error: any) {
     console.error("Get event error:", error);
     return NextResponse.json({ error: error.message || "Failed to fetch event" }, { status: 500 });

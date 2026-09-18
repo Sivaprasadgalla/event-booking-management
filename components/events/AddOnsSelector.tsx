@@ -50,7 +50,7 @@ export default function AddOnsSelector({
           return (
             <div
               key={addon.id}
-              className={`rounded-2xl p-4.5 border transition-all flex items-center justify-between gap-4 ${
+              className={`rounded-2xl p-4 border transition-all flex items-center justify-between gap-4 ${
                 isSelected
                   ? "border-purple-500/60 bg-purple-500/15 shadow-md shadow-purple-900/20"
                   : "border-white/10 bg-white/5 hover:border-purple-500/30 hover:bg-white/10"

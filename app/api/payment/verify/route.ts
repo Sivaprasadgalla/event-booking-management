@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
-import { Order, Booking, Event, User } from "@/models";
+import { Order, Booking, Event, User, SlotHold } from "@/models";
 import { verifyPaymentSignature } from "@/lib/razorpay";
 import { generateBookingReference } from "@/lib/utils";
 import QRCode from "qrcode";
@@ -144,6 +144,13 @@ export async function POST(req: NextRequest) {
           { _id: event._id, "scheduleSlots.id": item.selectedSlot.slotId },
           { $inc: { "scheduleSlots.$.bookedCount": item.guestsCount || 1 } }
         );
+
+        // Release temporary reservation hold since booking is now confirmed
+        await SlotHold.deleteMany({
+          eventId: event._id,
+          slotId: item.selectedSlot.slotId,
+          date: item.selectedSlot.date,
+        });
       }
     }
 

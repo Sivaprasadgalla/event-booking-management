@@ -13,3 +13,4 @@ export { Order, type IOrder } from "./Order";
 export { Booking, type IBooking, type ISelectedAddOn, type IRefundDetails } from "./Booking";
 export { Review, type IReview } from "./Review";
 export { Setting, type ISetting } from "./Setting";
+export { SlotHold, type ISlotHold } from "./SlotHold";

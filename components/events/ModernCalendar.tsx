@@ -29,6 +29,7 @@ import {
   Moon,
   Coffee,
   AlertCircle,
+  Lock,
 } from "lucide-react";
 
 export interface TimeSlotOption {
@@ -53,6 +54,13 @@ interface ModernCalendarProps {
     capacity: number;
     bookedCount: number;
   }>;
+  activeHolds?: Array<{
+    slotId: string;
+    date: string;
+    sessionId: string;
+    expiresAt: string;
+  }>;
+  clientSessionId?: string;
   selectedDate: string; // "YYYY-MM-DD"
   selectedSlotId: string;
   onSelectDate: (dateStr: string) => void;
@@ -78,6 +86,8 @@ export default function ModernCalendar({
   customOperatingDays = [1, 2, 3, 4, 5, 6, 0],
   dailyTimeSlots = [],
   scheduleSlots = [],
+  activeHolds = [],
+  clientSessionId = "",
   selectedDate,
   selectedSlotId,
   onSelectDate,
@@ -312,24 +322,44 @@ export default function ModernCalendar({
                 const isSelected = selectedSlotId === slot.id;
                 const slotShift = slot.slotType || "evening";
 
+                // Check active hold status
+                const hold = (activeHolds || []).find(
+                  (h) => h.slotId === slot.id && h.date === selectedDate
+                );
+                const isHeldByOther = Boolean(hold && hold.sessionId !== clientSessionId);
+                const isHeldByMe = Boolean(hold && hold.sessionId === clientSessionId);
+
+                // Check booked capacity
+                const sched = (scheduleSlots || []).find(
+                  (s) => s.id === slot.id && s.date === selectedDate
+                );
+                const isSoldOut = Boolean(sched && sched.bookedCount >= sched.capacity);
+                const isBlocked = isHeldByOther || isSoldOut;
+
                 return (
                   <motion.div
                     key={slot.id}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() =>
-                      onSelectSlot({
-                        slotId: slot.id,
-                        title: slot.title,
-                        date: selectedDate,
-                        startTime: slot.startTime,
-                        endTime: slot.endTime,
-                      })
-                    }
-                    className={`cursor-pointer p-5 rounded-2xl border-2 transition-all relative flex flex-col justify-between space-y-3 ${
-                      isSelected
-                        ? "border-purple-500 bg-purple-500/15 shadow-xl shadow-purple-900/30 ring-2 ring-purple-500/30"
-                        : "border-white/10 hover:border-purple-500/40 bg-white/5 hover:bg-white/10"
+                    whileHover={!isBlocked ? { scale: 1.02 } : {}}
+                    whileTap={!isBlocked ? { scale: 0.98 } : {}}
+                    onClick={() => {
+                      if (!isBlocked) {
+                        onSelectSlot({
+                          slotId: slot.id,
+                          title: slot.title,
+                          date: selectedDate,
+                          startTime: slot.startTime,
+                          endTime: slot.endTime,
+                        });
+                      }
+                    }}
+                    className={`p-5 rounded-2xl border-2 transition-all relative flex flex-col justify-between space-y-3 ${
+                      isHeldByOther
+                        ? "opacity-60 cursor-not-allowed bg-slate-900/60 border-dashed border-amber-500/40"
+                        : isSoldOut
+                        ? "opacity-50 cursor-not-allowed bg-slate-900/60 border-rose-500/30"
+                        : isSelected
+                        ? "cursor-pointer border-purple-500 bg-purple-500/15 shadow-xl shadow-purple-900/30 ring-2 ring-purple-500/30"
+                        : "cursor-pointer border-white/10 hover:border-purple-500/40 bg-white/5 hover:bg-white/10"
                     }`}
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -348,7 +378,21 @@ export default function ModernCalendar({
                       </div>
 
                       <div className="shrink-0">
-                        {isSelected ? (
+                        {isHeldByOther ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            <Lock className="w-3 h-3" />
+                            <span>Reserved (In Cart)</span>
+                          </span>
+                        ) : isSoldOut ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                            <span>Booked</span>
+                          </span>
+                        ) : isHeldByMe ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span>In Your Cart</span>
+                          </span>
+                        ) : isSelected ? (
                           <div className="w-6 h-6 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white flex items-center justify-center shadow-md">
                             <CheckCircle2 className="w-4 h-4" />
                           </div>
@@ -359,10 +403,23 @@ export default function ModernCalendar({
                     </div>
 
                     <div className="flex items-center justify-between pt-2 border-t border-white/10 text-xs text-slate-400">
-                      <span>Max Shift Capacity</span>
-                      <span className="font-semibold text-slate-200">
-                        {slot.capacity} guests
-                      </span>
+                      {isHeldByOther ? (
+                        <span className="text-amber-400 font-semibold text-[11px] flex items-center gap-1">
+                          <Lock className="w-3 h-3" />
+                          Reserved by another guest (10m hold)
+                        </span>
+                      ) : isSoldOut ? (
+                        <span className="text-rose-400 font-semibold text-[11px]">
+                          Sold out for this date
+                        </span>
+                      ) : (
+                        <>
+                          <span>Max Shift Capacity</span>
+                          <span className="font-semibold text-slate-200">
+                            {slot.capacity} guests
+                          </span>
+                        </>
+                      )}
                     </div>
                   </motion.div>
                 );
