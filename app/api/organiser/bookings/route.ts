@@ -19,7 +19,9 @@ export async function GET(req: NextRequest) {
 
     // Events owned by this organiser
     const eventFilter = user.role === "admin" ? {} : { organiser: user.id };
-    const myEvents = await Event.find(eventFilter).select("_id title");
+    const myEvents = await Event.find(eventFilter).select(
+      "_id title packages dailyTimeSlots scheduleSlots venue addOns"
+    ).lean();
     const myEventIds = myEvents.map((e) => e._id);
 
     const filter: Record<string, any> = {

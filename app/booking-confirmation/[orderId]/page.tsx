@@ -18,6 +18,8 @@ import {
   Video,
   Sparkles,
   FileText,
+  Phone,
+  MessageCircle,
 } from "lucide-react";
 
 export default function BookingConfirmationPage() {
@@ -273,29 +275,59 @@ END:VCALENDAR`;
                   </div>
                 </div>
 
-                {/* Right Ticket Stub with QR Code */}
-                <div className="bg-slate-950/80 border-t md:border-t-0 md:border-l border-dashed border-white/15 p-6 sm:p-8 flex flex-col items-center justify-center text-center space-y-3 w-full md:w-68 shrink-0">
-                  <span className="text-xs uppercase font-bold text-slate-400 tracking-wider">
-                    Entry Barcode / Pass
-                  </span>
-
-                  {/* QR Code image */}
-                  {booking.qrCodeData && (
-                    <div className="p-3 bg-white rounded-2xl shadow-lg">
-                      <img
-                        src={booking.qrCodeData}
-                        alt={`QR Code for ${booking.bookingReference}`}
-                        className="w-36 h-36 object-contain"
-                      />
+                {/* Right Voucher Stub */}
+                <div className="bg-slate-950/80 border-t md:border-t-0 md:border-l border-dashed border-white/15 p-6 sm:p-8 flex flex-col items-center justify-center text-center space-y-4 w-full md:w-72 shrink-0">
+                  <div className="space-y-1 w-full">
+                    <span className="text-[10px] uppercase font-bold text-amber-300 bg-amber-400/10 border border-amber-400/20 px-3 py-1 rounded-full inline-block tracking-wider">
+                      Celebration Pass Voucher
+                    </span>
+                    <h4 className="text-xs text-slate-400 font-medium pt-1">Booking Reference</h4>
+                    <div className="font-mono text-base font-black text-amber-400 bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl">
+                      {booking.bookingReference}
                     </div>
-                  )}
+                  </div>
 
-                  <span className="font-mono text-sm font-black text-amber-400">
-                    {booking.bookingReference}
-                  </span>
+                  {/* Confirmed Status Pill */}
+                  <div className="px-3.5 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center gap-1.5">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    <span>Venue Confirmed</span>
+                  </div>
 
-                  <span className="text-xs text-slate-400 max-w-[170px] leading-relaxed">
-                    Show this QR code at the venue gate for direct check-in
+                  {/* Host Contact Details Card */}
+                  <div className="w-full bg-white/5 rounded-2xl p-3 border border-white/10 space-y-2 text-left">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
+                      Venue Host Contact
+                    </span>
+                    <div className="text-xs font-bold text-white truncate">
+                      {event?.contactInfo?.contactPerson || event?.organiser?.name || "Venue Host Manager"}
+                    </div>
+
+                    <div className="flex flex-col gap-1.5 pt-1">
+                      {(event?.contactInfo?.phone || event?.organiser?.phone) && (
+                        <a
+                          href={`tel:${event?.contactInfo?.phone || event?.organiser?.phone}`}
+                          className="px-2.5 py-1.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 text-xs font-semibold flex items-center gap-1.5 transition"
+                        >
+                          <Phone className="w-3 h-3" />
+                          <span className="truncate">{event?.contactInfo?.phone || event?.organiser?.phone}</span>
+                        </a>
+                      )}
+                      {(event?.contactInfo?.whatsapp || event?.contactInfo?.phone || event?.organiser?.phone) && (
+                        <a
+                          href={`https://wa.me/${(event?.contactInfo?.whatsapp || event?.contactInfo?.phone || event?.organiser?.phone || "").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hi, I have booked ${event?.title} (Ref: ${booking.bookingReference}).`)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2.5 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center gap-1.5 transition"
+                        >
+                          <MessageCircle className="w-3 h-3" />
+                          <span>WhatsApp Host</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
+                  <span className="text-[11px] text-slate-400 leading-relaxed">
+                    Provide your Booking Reference upon arrival for private venue entry and hosting.
                   </span>
                 </div>
               </div>

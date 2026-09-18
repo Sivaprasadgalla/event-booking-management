@@ -15,6 +15,11 @@ import {
   AlertCircle,
   Filter,
   RefreshCw,
+  Plus,
+  X,
+  Phone,
+  DollarSign,
+  Sparkles,
 } from "lucide-react";
 
 export default function OrganiserBookingsPage() {
@@ -32,6 +37,22 @@ export default function OrganiserBookingsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [checkingInId, setCheckingInId] = useState<string | null>(null);
 
+  // Direct offline booking modal state
+  const [showDirectModal, setShowDirectModal] = useState(false);
+  const [directSubmitting, setDirectSubmitting] = useState(false);
+  const [directForm, setDirectForm] = useState({
+    eventId: "",
+    date: new Date().toISOString().split("T")[0],
+    slotId: "",
+    packageId: "",
+    customerName: "",
+    customerPhone: "",
+    customerEmail: "",
+    guestsCount: 10,
+    paymentMode: "Cash at Venue",
+    directNotes: "",
+  });
+
   const fetchBookings = () => {
     setLoading(true);
     const params = new URLSearchParams();
@@ -42,7 +63,18 @@ export default function OrganiserBookingsPage() {
       .then((res) => res.json())
       .then((data) => {
         setBookings(data.bookings || []);
-        setEvents(data.events || []);
+        const evts = data.events || [];
+        setEvents(evts);
+
+        // Prepopulate directForm defaults if empty
+        if (evts.length > 0) {
+          setDirectForm((prev) => ({
+            ...prev,
+            eventId: prev.eventId || evts[0]._id,
+            packageId: prev.packageId || evts[0].packages?.[0]?.id || "",
+            slotId: prev.slotId || evts[0].dailyTimeSlots?.[0]?.id || "",
+          }));
+        }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -87,6 +119,45 @@ export default function OrganiserBookingsPage() {
     }
   };
 
+  const handleCreateDirectBooking = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!directForm.eventId || !directForm.customerName || !directForm.customerPhone) {
+      toast.warning("Please enter customer name, phone, and select a venue.", "Missing Details");
+      return;
+    }
+
+    try {
+      setDirectSubmitting(true);
+      const res = await fetch("/api/organiser/bookings/direct", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(directForm),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to create direct reservation");
+      }
+
+      toast.success(
+        `Direct booking confirmed! Reference: ${data.booking.bookingReference}`,
+        "Reservation Created"
+      );
+      setBookings((prev) => [data.booking, ...prev]);
+      setShowDirectModal(false);
+      setDirectForm((prev) => ({
+        ...prev,
+        customerName: "",
+        customerPhone: "",
+        customerEmail: "",
+        directNotes: "",
+      }));
+    } catch (err: any) {
+      toast.error(err.message || "Failed to register direct booking", "Creation Error");
+    } finally {
+      setDirectSubmitting(false);
+    }
+  };
+
   const filteredBookings = bookings.filter((b) => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
@@ -109,19 +180,29 @@ export default function OrganiserBookingsPage() {
             <span>Gate Check-In & Attendee Manifest</span>
           </h1>
           <p className="text-sm sm:text-base text-slate-400 mt-1">
-            Verify guest passes, scan QR references, and record arrivals at venue entrances.
+            Verify guest passes, record walk-in phone reservations, and track arrivals at venue entrances.
           </p>
         </div>
 
-        <div className="bg-slate-900/60 border border-white/10 rounded-2xl px-6 py-4 backdrop-blur-xl shadow-xl flex items-center gap-5 self-start sm:self-auto">
-          <div>
-            <span className="text-xs uppercase font-bold text-slate-400 block tracking-wider">Gate Check-in</span>
-            <span className="text-2xl font-heading font-black text-amber-400">
-              {totalCheckedIn} / {bookings.length}
-            </span>
-          </div>
-          <div className="w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center font-bold">
-            <Users className="w-6 h-6" />
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => setShowDirectModal(true)}
+            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-heading font-bold text-xs sm:text-sm shadow-xl shadow-purple-900/30 flex items-center gap-2 transition hover:scale-[1.02]"
+          >
+            <Plus className="w-4 h-4" />
+            <span>+ Direct Reservation</span>
+          </button>
+
+          <div className="bg-slate-900/60 border border-white/10 rounded-2xl px-6 py-4 backdrop-blur-xl shadow-xl flex items-center gap-5 self-start sm:self-auto">
+            <div>
+              <span className="text-xs uppercase font-bold text-slate-400 block tracking-wider">Gate Check-in</span>
+              <span className="text-2xl font-heading font-black text-amber-400">
+                {totalCheckedIn} / {bookings.length}
+              </span>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center font-bold">
+              <Users className="w-6 h-6" />
+            </div>
           </div>
         </div>
       </div>
@@ -196,13 +277,25 @@ export default function OrganiserBookingsPage() {
                   const isCheckedIn = b.checkInStatus === "checked_in";
                   return (
                     <tr key={b._id} className="hover:bg-white/5 transition">
-                      <td className="py-4 px-5 font-mono font-bold text-amber-400 text-xs">
-                        {b.bookingReference}
+                      <td className="py-4 px-5">
+                        <span className="font-mono font-bold text-amber-400 text-xs block">
+                          {b.bookingReference}
+                        </span>
+                        {b.bookingType === "direct" && (
+                          <span className="inline-block mt-1 px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[10px] font-bold">
+                            Direct Offline
+                          </span>
+                        )}
                       </td>
 
                       <td className="py-4 px-5">
                         <span className="font-bold text-white block">{b.customer?.name}</span>
-                        <span className="text-xs text-slate-400">{b.customer?.email}</span>
+                        <span className="text-xs text-slate-400 block">{b.customer?.phone || b.customer?.email}</span>
+                        {b.paymentMode && (
+                          <span className="text-[10px] text-slate-400 block mt-0.5">
+                            {b.paymentMode}
+                          </span>
+                        )}
                       </td>
 
                       <td className="py-4 px-5">
@@ -264,6 +357,218 @@ export default function OrganiserBookingsPage() {
           </div>
         )}
       </div>
+
+      {/* Direct Offline / Walk-in Booking Modal */}
+      {showDirectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+          <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 sm:p-8 max-w-xl w-full shadow-2xl space-y-6 text-white my-8">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-purple-500/20 text-purple-400">
+                    <Sparkles className="w-4 h-4" />
+                  </span>
+                  <h3 className="font-heading font-bold text-lg text-white">
+                    Create Direct Walk-in / Phone Reservation
+                  </h3>
+                </div>
+                <p className="text-xs text-slate-400">
+                  Book direct reservations for your venue, allocate celebration shifts, and record offline payments.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowDirectModal(false)}
+                className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-white/5 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateDirectBooking} className="space-y-4 text-xs">
+              {/* Event selection */}
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-300 block">Select Venue Partner Listing *</label>
+                <select
+                  value={directForm.eventId}
+                  onChange={(e) => {
+                    const evId = e.target.value;
+                    const ev = events.find((x) => x._id === evId);
+                    setDirectForm({
+                      ...directForm,
+                      eventId: evId,
+                      packageId: ev?.packages?.[0]?.id || "",
+                      slotId: ev?.dailyTimeSlots?.[0]?.id || "",
+                    });
+                  }}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white text-xs outline-none focus:border-purple-500"
+                  required
+                >
+                  {events.map((ev) => (
+                    <option key={ev._id} value={ev._id}>
+                      {ev.title} ({ev.venue?.city || "Venue"})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Date & Shift */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-300 block">Celebration Date *</label>
+                  <input
+                    type="date"
+                    value={directForm.date}
+                    onChange={(e) => setDirectForm({ ...directForm, date: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white text-xs outline-none focus:border-purple-500"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-300 block">Hosting Time Shift *</label>
+                  {(() => {
+                    const ev = events.find((x) => x._id === directForm.eventId) || events[0];
+                    const slots = ev?.dailyTimeSlots || [];
+                    return (
+                      <select
+                        value={directForm.slotId}
+                        onChange={(e) => setDirectForm({ ...directForm, slotId: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white text-xs outline-none focus:border-purple-500"
+                        required
+                      >
+                        {slots.map((s: any) => (
+                          <option key={s.id} value={s.id}>
+                            {s.title} ({s.startTime} - {s.endTime})
+                          </option>
+                        ))}
+                      </select>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Package Tier & Guests */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-300 block">Celebration Package *</label>
+                  {(() => {
+                    const ev = events.find((x) => x._id === directForm.eventId) || events[0];
+                    const pkgs = ev?.packages || [];
+                    return (
+                      <select
+                        value={directForm.packageId}
+                        onChange={(e) => setDirectForm({ ...directForm, packageId: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white text-xs outline-none focus:border-purple-500"
+                        required
+                      >
+                        {pkgs.map((p: any) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name} - ₹{p.price.toLocaleString("en-IN")}
+                          </option>
+                        ))}
+                      </select>
+                    );
+                  })()}
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-300 block">Attendees / Family Guests *</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={directForm.guestsCount}
+                    onChange={(e) => setDirectForm({ ...directForm, guestsCount: Number(e.target.value) })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white text-xs outline-none focus:border-purple-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Customer Contact */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-white/10">
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-300 block">Guest / Host Full Name *</label>
+                  <input
+                    type="text"
+                    value={directForm.customerName}
+                    onChange={(e) => setDirectForm({ ...directForm, customerName: e.target.value })}
+                    placeholder="e.g. Vikramaditya Sharma"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white text-xs outline-none focus:border-purple-500"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-300 block">Guest Phone Number *</label>
+                  <input
+                    type="tel"
+                    value={directForm.customerPhone}
+                    onChange={(e) => setDirectForm({ ...directForm, customerPhone: e.target.value })}
+                    placeholder="e.g. +91 98765 43210"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white text-xs outline-none focus:border-purple-500"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-300 block">Email Address (Optional)</label>
+                  <input
+                    type="email"
+                    value={directForm.customerEmail}
+                    onChange={(e) => setDirectForm({ ...directForm, customerEmail: e.target.value })}
+                    placeholder="guest@gmail.com"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white text-xs outline-none focus:border-purple-500"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-300 block">Payment Mode Received *</label>
+                  <select
+                    value={directForm.paymentMode}
+                    onChange={(e) => setDirectForm({ ...directForm, paymentMode: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white text-xs outline-none focus:border-purple-500"
+                  >
+                    <option value="Cash at Venue">Cash at Venue</option>
+                    <option value="UPI Direct / QR">UPI Direct / QR</option>
+                    <option value="Card Swipe at Venue">Card Swipe at Venue</option>
+                    <option value="Bank Wire / IMPS">Bank Wire / IMPS</option>
+                    <option value="Complimentary / Host VIP">Complimentary / Host VIP</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-300 block">Direct Notes / Family Requests</label>
+                <textarea
+                  rows={2}
+                  value={directForm.directNotes}
+                  onChange={(e) => setDirectForm({ ...directForm, directNotes: e.target.value })}
+                  placeholder="e.g. 1st Birthday party, requested blue balloon arch and eggless chocolate cake..."
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-white/10 text-white placeholder-slate-500 text-xs outline-none focus:border-purple-500"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-3 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setShowDirectModal(false)}
+                  className="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 font-semibold text-xs transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={directSubmitting}
+                  className="flex-1 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-xs shadow-lg shadow-purple-900/30 transition disabled:opacity-50"
+                >
+                  {directSubmitting ? "Locking Reservation..." : "Confirm Direct Reservation"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -9,14 +9,8 @@ import { formatPrice, formatEventDate } from "@/lib/utils";
 import {
   CreditCard,
   ShieldCheck,
-  Calendar,
-  Clock,
-  MapPin,
   Lock,
-  Sparkles,
   AlertCircle,
-  Building2,
-  CheckCircle2,
 } from "lucide-react";
 
 declare global {
@@ -70,7 +64,7 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (items.length === 0) {
-      router.push("/events");
+      router.push("/cart");
     }
   }, [items, router]);
 
@@ -132,8 +126,8 @@ export default function CheckoutPage() {
         }
 
         toast.success("Reservation confirmed! Your celebration is locked in.", "Celebration Booked");
-        clearCart();
         router.push(`/booking-confirmation/${orderId}`);
+        clearCart();
         return;
       }
 

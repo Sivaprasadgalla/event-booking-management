@@ -343,27 +343,23 @@ export default function CustomerInvoicePage() {
           </div>
         </div>
 
-        {/* QR Entry Pass & Footer Note */}
+        {/* Verified Reservation Voucher Badge & Footer Note */}
         <div className="pt-6 border-t border-white/10 print:border-slate-300 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
-            {booking.qrCodeData && (
-              <div className="p-2 bg-white rounded-xl shadow-md shrink-0">
-                <img
-                  src={booking.qrCodeData}
-                  alt="Entry QR"
-                  className="w-20 h-20 object-contain"
-                />
-              </div>
-            )}
-            <div className="space-y-0.5 text-xs">
-              <span className="font-heading font-bold text-white print:text-slate-900 block">
-                Digital Pass QR Code
+            <div className="p-3 bg-white/5 print:bg-slate-100 rounded-2xl border border-white/10 print:border-slate-300 text-center shrink-0">
+              <span className="text-[10px] font-bold text-amber-400 print:text-purple-700 uppercase tracking-wider block">
+                Official Voucher
               </span>
-              <span className="font-mono text-amber-400 print:text-purple-700 text-xs font-bold block">
+              <span className="font-mono text-sm font-black text-white print:text-slate-900 block">
                 {booking.bookingReference}
               </span>
+            </div>
+            <div className="space-y-0.5 text-xs">
+              <span className="font-heading font-bold text-white print:text-slate-900 block">
+                Confirmed Celebration Booking Voucher
+              </span>
               <span className="text-[11px] text-slate-400 print:text-slate-600 block max-w-xs">
-                Present this invoice QR code or digital pass at venue gate security for contact-free entry validation.
+                Provide this reservation reference upon arrival for your private celebration and hospitality hosting.
               </span>
             </div>
           </div>

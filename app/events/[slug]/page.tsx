@@ -23,6 +23,9 @@ import {
   ExternalLink,
   Sparkles,
   PartyPopper,
+  Phone,
+  MessageCircle,
+  Mail,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -117,8 +120,8 @@ export default function EventDetailPage() {
     );
   }
 
-  // Calculate pricing
-  const packageTotal = (selectedPackage?.price || 0) * guestsCount;
+  // Calculate pricing (flat celebration package fee + add-ons)
+  const packageTotal = selectedPackage?.price || 0;
   const addOnsList = (event.addOns || [])
     .filter((a: any) => (selectedAddOns[a.id] || 0) > 0)
     .map((a: any) => ({
@@ -248,26 +251,51 @@ export default function EventDetailPage() {
             </p>
           </div>
 
-          {/* Host Partner Badge Card */}
-          <div className="bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-white/10 p-4 shadow-xl flex items-center gap-3.5 shrink-0">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center font-heading font-bold text-lg shadow-md overflow-hidden ring-1 ring-white/20">
-              {event.organiser?.avatar ? (
-                <img src={event.organiser.avatar} alt="Host" className="w-full h-full object-cover" />
-              ) : (
-                (event.organiser?.name || "H").charAt(0)
-              )}
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm font-heading font-bold text-white">
-                  {event.organiser?.companyName || event.organiser?.name || "Venue Partner"}
-                </span>
-                {event.organiser?.isVerified && (
-                  <CheckCircle className="w-4 h-4 text-purple-400" />
+          {/* Host Partner Badge Card with Quick Contacts */}
+          <div className="bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-white/10 p-4 shadow-xl flex flex-col sm:flex-row sm:items-center gap-3.5 shrink-0">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center font-heading font-bold text-lg shadow-md overflow-hidden ring-1 ring-white/20">
+                {event.organiser?.avatar ? (
+                  <img src={event.organiser.avatar} alt="Host" className="w-full h-full object-cover" />
+                ) : (
+                  (event.organiser?.name || "H").charAt(0)
                 )}
               </div>
-              <span className="text-xs text-slate-400">Verified Celebration Host</span>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-heading font-bold text-white">
+                    {event.contactInfo?.contactPerson || event.organiser?.companyName || event.organiser?.name || "Venue Partner"}
+                  </span>
+                  {event.organiser?.isVerified && (
+                    <CheckCircle className="w-4 h-4 text-purple-400" />
+                  )}
+                </div>
+                <span className="text-xs text-slate-400">Verified Celebration Host</span>
+              </div>
             </div>
+
+            {(event.contactInfo?.phone || event.organiser?.phone) && (
+              <div className="flex items-center gap-2 pt-2 sm:pt-0 sm:border-l sm:border-white/10 sm:pl-3.5">
+                <a
+                  href={`tel:${event.contactInfo?.phone || event.organiser?.phone}`}
+                  className="p-2 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 text-xs font-semibold flex items-center gap-1.5 transition"
+                  title="Call Venue Host Directly"
+                >
+                  <Phone className="w-3.5 h-3.5" />
+                  <span className="hidden md:inline">Call Host</span>
+                </a>
+                <a
+                  href={`https://wa.me/${(event.contactInfo?.whatsapp || event.contactInfo?.phone || event.organiser?.phone || "").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hi, I'm interested in booking ${event.title} for a family celebration.`)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="p-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center gap-1.5 transition"
+                  title="Chat on WhatsApp"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  <span className="hidden md:inline">WhatsApp</span>
+                </a>
+              </div>
+            )}
           </div>
         </div>
 
@@ -396,6 +424,46 @@ export default function EventDetailPage() {
               </div>
             </div>
 
+            {/* Host Contact & Party Coordination Card */}
+            {(event.contactInfo?.phone || event.organiser?.phone) && (
+              <div className="pt-6 border-t border-slate-800 space-y-3">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-purple-400" />
+                  <span>Host Contact & Celebration Inquiries</span>
+                </h4>
+                <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <span className="text-xs font-bold text-white block">
+                      {event.contactInfo?.contactPerson || event.organiser?.name || "Venue Host Coordinator"}
+                    </span>
+                    <span className="text-xs text-slate-400">
+                      Reach out directly with questions regarding custom cakes, family arrangements, catering, or decor.
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <a
+                      href={`tel:${event.contactInfo?.phone || event.organiser?.phone}`}
+                      className="px-3.5 py-2 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-xs font-semibold text-purple-300 flex items-center gap-1.5 transition"
+                    >
+                      <Phone className="w-3.5 h-3.5" />
+                      <span>{event.contactInfo?.phone || event.organiser?.phone}</span>
+                    </a>
+                    {(event.contactInfo?.whatsapp || event.contactInfo?.phone || event.organiser?.phone) && (
+                      <a
+                        href={`https://wa.me/${(event.contactInfo?.whatsapp || event.contactInfo?.phone || event.organiser?.phone || "").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hi, I'm inquiring about ${event.title} on CelebrateHub.`)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3.5 py-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-xs font-semibold text-emerald-300 flex items-center gap-1.5 transition"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" />
+                        <span>WhatsApp</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="pt-6 border-t border-slate-800 space-y-3">
               <h4 className="text-sm font-bold text-white flex items-center gap-2">
                 <ShieldAlert className="w-4 h-4 text-slate-400" />
@@ -418,14 +486,28 @@ export default function EventDetailPage() {
                     ? `Cancellations permitted up to ${event.cancellationPolicy?.maxDaysBefore || 2} day(s) before your reservation date.`
                     : "Reservations are non-refundable once booked."}
                 </p>
+                {event.policyText && (
+                  <div className="text-slate-300 text-xs pt-1 whitespace-pre-line border-t border-white/5 mt-1">
+                    {event.policyText}
+                  </div>
+                )}
               </div>
 
               {event.termsAndConditions && (
-                <ul className="list-disc list-inside space-y-1 text-xs text-slate-400 pt-1">
-                  {event.termsAndConditions.map((tc: string, i: number) => (
-                    <li key={i}>{tc}</li>
-                  ))}
-                </ul>
+                <div className="space-y-1.5 pt-2">
+                  <span className="text-xs font-bold text-slate-300 block">Venue Terms & Conditions & House Rules:</span>
+                  {Array.isArray(event.termsAndConditions) ? (
+                    <ul className="list-disc list-inside space-y-1 text-xs text-slate-400">
+                      {event.termsAndConditions.map((tc: string, i: number) => (
+                        <li key={i}>{tc}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="text-xs text-slate-400 whitespace-pre-line">
+                      {event.termsAndConditions}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </section>
@@ -455,12 +537,15 @@ export default function EventDetailPage() {
             <div className="space-y-3.5 text-sm">
               <div className="bg-slate-950/60 p-4 rounded-2xl border border-white/10 space-y-1.5">
                 <span className="text-xs uppercase font-bold text-slate-400 block tracking-wider">
-                  Package & Guests
+                  Celebration Package Tier
                 </span>
                 <div className="flex justify-between font-semibold text-white">
-                  <span>
-                    {selectedPackage?.name} × {guestsCount}
-                  </span>
+                  <div>
+                    <span className="block">{selectedPackage?.name}</span>
+                    <span className="text-[11px] text-purple-300 font-normal block">
+                      Flat Fee • {guestsCount} attendee(s) included
+                    </span>
+                  </div>
                   <span className="font-heading font-bold">{formatPrice(packageTotal)}</span>
                 </div>
               </div>
@@ -527,6 +612,19 @@ export default function EventDetailPage() {
               <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 rounded-xl text-xs flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>Added to cart successfully!</span>
+              </div>
+            )}
+
+            {(event.contactInfo?.phone || event.organiser?.phone) && (
+              <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs text-slate-400">
+                <span>Questions? Call Host:</span>
+                <a
+                  href={`tel:${event.contactInfo?.phone || event.organiser?.phone}`}
+                  className="text-purple-300 hover:text-purple-200 font-semibold flex items-center gap-1 transition"
+                >
+                  <Phone className="w-3 h-3" />
+                  <span>{event.contactInfo?.phone || event.organiser?.phone}</span>
+                </a>
               </div>
             )}
 

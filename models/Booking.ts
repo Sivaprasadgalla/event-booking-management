@@ -41,7 +41,10 @@ export interface IBooking extends Document {
   status: "confirmed" | "cancelled" | "attended";
   checkInStatus: "pending" | "checked_in";
   checkedInAt?: Date;
-  qrCodeData: string;
+  qrCodeData?: string;
+  bookingType?: "online" | "direct";
+  paymentMode?: string;
+  directNotes?: string;
   refundDetails: IRefundDetails;
   createdAt: Date;
   updatedAt: Date;
@@ -107,7 +110,14 @@ const BookingSchema = new Schema<IBooking>(
       default: "pending",
     },
     checkedInAt: { type: Date },
-    qrCodeData: { type: String, required: true },
+    qrCodeData: { type: String, default: "" },
+    bookingType: {
+      type: String,
+      enum: ["online", "direct"],
+      default: "online",
+    },
+    paymentMode: { type: String, default: "Online / Razorpay" },
+    directNotes: { type: String, default: "" },
     refundDetails: { type: RefundDetailsSchema, default: () => ({ status: "none", amount: 0 }) },
   },
   { timestamps: true }

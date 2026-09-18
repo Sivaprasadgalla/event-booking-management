@@ -11,7 +11,6 @@ import {
   Calendar,
   Clock,
   MapPin,
-  QrCode,
   XCircle,
   Star,
   CheckCircle,
@@ -20,6 +19,8 @@ import {
   ExternalLink,
   Sparkles,
   FileText,
+  Phone,
+  MessageCircle,
 } from "lucide-react";
 
 export default function CustomerBookingsPage() {
@@ -293,13 +294,13 @@ export default function CustomerBookingsPage() {
                   </span>
 
                   <div className="flex items-center gap-2.5">
-                    {/* View Digital Ticket */}
+                    {/* View Digital Voucher */}
                     <button
                       onClick={() => setActiveTicket(b)}
                       className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs sm:text-sm font-heading font-bold flex items-center gap-2 border border-white/10 transition"
                     >
-                      <QrCode className="w-4 h-4 text-amber-400" />
-                      <span>View Pass</span>
+                      <Ticket className="w-4 h-4 text-amber-400" />
+                      <span>View Voucher</span>
                     </button>
 
                     {/* Download Tax Invoice */}
@@ -340,40 +341,98 @@ export default function CustomerBookingsPage() {
         </div>
       )}
 
-      {/* QR Code Pass Modal */}
+      {/* Celebration Reservation Voucher Modal */}
       {activeTicket && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl space-y-5 text-center text-white">
-            <div className="space-y-1.5">
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-300 bg-amber-400/10 border border-amber-400/20 px-3 py-0.5 rounded-full inline-block">
-                Digital Venue Pass
+          <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-5 text-white">
+            <div className="text-center space-y-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300 bg-amber-400/10 border border-amber-400/20 px-3 py-1 rounded-full inline-block">
+                Celebration Pass Voucher
               </span>
-              <h3 className="font-heading font-bold text-lg text-white line-clamp-1">
+              <h3 className="font-heading font-bold text-xl text-white line-clamp-1">
                 {activeTicket.event?.title}
               </h3>
               <p className="text-xs text-slate-400">
-                {activeTicket.packageDetails?.name} • {activeTicket.guestsCount} Guest(s)
+                {activeTicket.packageDetails?.name} • {activeTicket.guestsCount} Guest(s) Included
               </p>
             </div>
 
-            {/* QR Code Render */}
-            <div className="p-4 bg-white rounded-2xl flex justify-center shadow-lg">
-              <img
-                src={activeTicket.qrCodeData}
-                alt="Ticket QR Code"
-                className="w-48 h-48 object-contain"
-              />
+            {/* Reference Badge Card */}
+            <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center space-y-1">
+              <span className="text-[11px] uppercase tracking-wider text-slate-400 font-bold block">
+                Booking Reference
+              </span>
+              <div className="font-mono text-xl font-black text-amber-400">
+                {activeTicket.bookingReference}
+              </div>
+              <span className="text-[11px] text-emerald-400 font-semibold block">
+                ✓ Confirmed Celebration Reservation
+              </span>
             </div>
 
-            <div className="font-mono text-sm font-black text-amber-400">
-              {activeTicket.bookingReference}
+            {/* Shift & Venue Details */}
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/10 space-y-2 text-xs">
+              <div className="flex items-center justify-between text-slate-300">
+                <span className="flex items-center gap-1.5 text-slate-400">
+                  <Calendar className="w-3.5 h-3.5 text-amber-400" /> Date:
+                </span>
+                <span className="font-bold text-white">
+                  {formatEventDate(activeTicket.selectedSlot?.date, "dd MMM yyyy")}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-slate-300">
+                <span className="flex items-center gap-1.5 text-slate-400">
+                  <Clock className="w-3.5 h-3.5 text-amber-400" /> Time Slot:
+                </span>
+                <span className="font-bold text-white">
+                  {activeTicket.selectedSlot?.startTime} – {activeTicket.selectedSlot?.endTime}
+                </span>
+              </div>
+              <div className="flex items-start justify-between text-slate-300 pt-1 border-t border-white/5">
+                <span className="flex items-center gap-1.5 text-slate-400 shrink-0">
+                  <MapPin className="w-3.5 h-3.5 text-amber-400" /> Venue:
+                </span>
+                <span className="font-medium text-right text-slate-200 truncate max-w-[200px]">
+                  {activeTicket.event?.venue?.name || "Private Venue"}, {activeTicket.event?.venue?.city}
+                </span>
+              </div>
             </div>
 
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Present this digital pass at gate security for contact-free venue check-in.
-            </p>
+            {/* Host Contact Details */}
+            <div className="bg-purple-950/40 border border-purple-500/20 rounded-2xl p-4 space-y-2.5">
+              <span className="text-[10px] uppercase font-bold text-purple-300 tracking-wider block">
+                Venue Host Contact Info
+              </span>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-white">
+                  {activeTicket.event?.contactInfo?.contactPerson || activeTicket.organiser?.name || "Venue Host Coordinator"}
+                </span>
+              </div>
+              <div className="flex gap-2 pt-1">
+                {(activeTicket.event?.contactInfo?.phone || activeTicket.organiser?.phone) && (
+                  <a
+                    href={`tel:${activeTicket.event?.contactInfo?.phone || activeTicket.organiser?.phone}`}
+                    className="flex-1 py-2 px-3 rounded-xl bg-purple-600/30 hover:bg-purple-600/40 text-purple-200 border border-purple-500/40 text-xs font-semibold flex items-center justify-center gap-1.5 transition"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    <span>Call Host</span>
+                  </a>
+                )}
+                {(activeTicket.event?.contactInfo?.whatsapp || activeTicket.event?.contactInfo?.phone || activeTicket.organiser?.phone) && (
+                  <a
+                    href={`https://wa.me/${(activeTicket.event?.contactInfo?.whatsapp || activeTicket.event?.contactInfo?.phone || activeTicket.organiser?.phone || "").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hi, I'm reaching out regarding my booking Ref: ${activeTicket.bookingReference}.`)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex-1 py-2 px-3 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/40 text-emerald-200 border border-emerald-500/40 text-xs font-semibold flex items-center justify-center gap-1.5 transition"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    <span>WhatsApp</span>
+                  </a>
+                )}
+              </div>
+            </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 pt-1">
               <Link
                 href={`/customer/invoices/${activeTicket._id}`}
                 className="flex-1 py-3 rounded-xl bg-amber-400/15 hover:bg-amber-400/25 text-amber-300 text-xs sm:text-sm font-heading font-bold border border-amber-400/30 flex items-center justify-center gap-1.5 transition"
@@ -385,7 +444,7 @@ export default function CustomerBookingsPage() {
                 onClick={() => setActiveTicket(null)}
                 className="flex-1 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs sm:text-sm font-heading font-bold border border-white/10 transition"
               >
-                Close Pass
+                Close Voucher
               </button>
             </div>
           </div>

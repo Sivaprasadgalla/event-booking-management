@@ -46,6 +46,13 @@ export interface IVenue {
   googleMapsUrl?: string;
 }
 
+export interface IContactInfo {
+  phone: string;
+  whatsapp?: string;
+  contactPerson?: string;
+  email?: string;
+}
+
 export interface ICancellationPolicy {
   allowed: boolean;
   maxDaysBefore: number;
@@ -63,6 +70,7 @@ export interface IEvent extends Document {
   venueType: string;
   celebrationTypes: string[];
   venue: IVenue;
+  contactInfo?: IContactInfo;
   coverImage: string;
   gallery: string[];
   packages: IPackage[];
@@ -73,6 +81,7 @@ export interface IEvent extends Document {
   scheduleSlots: IScheduleSlot[];
   termsAndConditions: string[];
   cancellationPolicy: ICancellationPolicy;
+  policyText?: string;
   status: "draft" | "pending_approval" | "approved" | "rejected" | "published" | "unpublished";
   adminFeedback?: string;
   isFeatured: boolean;
@@ -156,6 +165,16 @@ const CancellationPolicySchema = new Schema<ICancellationPolicy>(
   { _id: false }
 );
 
+const ContactInfoSchema = new Schema<IContactInfo>(
+  {
+    phone: { type: String, default: "" },
+    whatsapp: { type: String, default: "" },
+    contactPerson: { type: String, default: "" },
+    email: { type: String, default: "" },
+  },
+  { _id: false }
+);
+
 const EventSchema = new Schema<IEvent>(
   {
     title: { type: String, required: true, trim: true },
@@ -168,6 +187,7 @@ const EventSchema = new Schema<IEvent>(
     venueType: { type: String, default: "Rooftop Lounge" },
     celebrationTypes: [{ type: String }],
     venue: { type: VenueSchema, required: true },
+    contactInfo: { type: ContactInfoSchema, default: () => ({}) },
     coverImage: { type: String, required: true },
     gallery: [{ type: String }],
     packages: { type: [PackageSchema], default: [] },
@@ -182,6 +202,7 @@ const EventSchema = new Schema<IEvent>(
     scheduleSlots: { type: [ScheduleSlotSchema], default: [] },
     termsAndConditions: [{ type: String }],
     cancellationPolicy: { type: CancellationPolicySchema, default: () => ({}) },
+    policyText: { type: String, default: "" },
     status: {
       type: String,
       enum: ["draft", "pending_approval", "approved", "rejected", "published", "unpublished"],

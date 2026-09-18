@@ -107,6 +107,51 @@ export default function PackageSelector({
           );
         })}
       </div>
+
+      {/* Family Guest Count Stepper */}
+      {selectedPackageId && (
+        <div className="mt-4 p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-0.5">
+            <span className="text-xs font-bold text-white flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5 text-purple-400" />
+              <span>Family & Guests Attending</span>
+            </span>
+            <p className="text-[11px] text-slate-400">
+              The selected package is a flat celebration fee covering your private party up to package capacity.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 self-start sm:self-auto">
+            <div className="flex items-center border border-white/15 rounded-xl bg-slate-950 p-1">
+              <button
+                type="button"
+                onClick={() => onChangeGuests(Math.max(1, guestsCount - 1))}
+                disabled={guestsCount <= 1}
+                className="w-7 h-7 flex items-center justify-center hover:bg-white/10 text-slate-200 disabled:opacity-30 rounded-lg transition font-bold"
+              >
+                -
+              </button>
+              <span className="w-10 text-center text-xs font-bold text-white">
+                {guestsCount}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  const currentPkg = packages.find((p) => p.id === selectedPackageId);
+                  const maxCap = currentPkg?.capacity || 100;
+                  onChangeGuests(Math.min(maxCap, guestsCount + 1));
+                }}
+                className="w-7 h-7 flex items-center justify-center hover:bg-white/10 text-slate-200 rounded-lg transition font-bold"
+              >
+                +
+              </button>
+            </div>
+            <span className="text-xs text-purple-300 font-semibold whitespace-nowrap">
+              guest(s)
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

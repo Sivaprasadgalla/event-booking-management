@@ -171,6 +171,7 @@ export async function POST(req: NextRequest) {
         ? data.celebrationTypes
         : ["Birthday Parties", "Private Celebrations", "Anniversary"],
       venue: data.venue || { name: "", address: "", city: "" },
+      contactInfo: data.contactInfo || { phone: "", whatsapp: "", contactPerson: "", email: "" },
       operatingDays: data.operatingDays || "all_days",
       customOperatingDays: Array.isArray(data.customOperatingDays) ? data.customOperatingDays : [1, 2, 3, 4, 5],
       dailyTimeSlots: Array.isArray(data.dailyTimeSlots) && data.dailyTimeSlots.length > 0
@@ -219,12 +220,17 @@ export async function POST(req: NextRequest) {
           bookedCount: 0,
         },
       ],
-      termsAndConditions: data.termsAndConditions || ["All attendees must present valid photo ID."],
+      termsAndConditions: Array.isArray(data.termsAndConditions)
+        ? data.termsAndConditions
+        : typeof data.termsAndConditions === "string"
+        ? data.termsAndConditions.split("\n").map((t: string) => t.trim()).filter(Boolean)
+        : ["Decor setup is permitted 60 minutes prior to shift commencement."],
       cancellationPolicy: data.cancellationPolicy || {
         allowed: true,
         maxDaysBefore: 2,
         refundPercentage: 80,
       },
+      policyText: data.policyText || "",
       status: data.submitForApproval ? "pending_approval" : "draft",
       isFeatured: false,
     });

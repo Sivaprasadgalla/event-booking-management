@@ -155,10 +155,11 @@ export default function CartPage() {
               <div className="bg-white/5 rounded-2xl p-4 sm:p-5 space-y-3 text-sm border border-white/5">
                 <div className="flex items-center justify-between font-semibold text-white">
                   <span>
-                    Celebration Tier: <span className="text-amber-300 font-bold">{item.packageDetails.name}</span> ({formatPrice(item.packageDetails.price)} / guest)
+                    Celebration Package: <span className="text-amber-300 font-bold">{item.packageDetails.name}</span>{" "}
+                    <span className="text-xs text-slate-400 font-normal">(Flat Celebration Tier Fee)</span>
                   </span>
                   <span className="font-heading font-bold text-white">
-                    {formatPrice(item.packageDetails.price * item.guestsCount)}
+                    {formatPrice(item.packageDetails.price)}
                   </span>
                 </div>
 

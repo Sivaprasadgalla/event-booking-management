@@ -3,7 +3,6 @@ import { connectToDatabase } from "@/lib/db";
 import { Order, Booking, Event, User, SlotHold } from "@/models";
 import { verifyPaymentSignature } from "@/lib/razorpay";
 import { generateBookingReference } from "@/lib/utils";
-import QRCode from "qrcode";
 import { getUserFromRequest } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
@@ -73,29 +72,8 @@ export async function POST(req: NextRequest) {
 
       const bookingRef = generateBookingReference();
 
-      // Generate verifiable QR code
-      const qrDataPayload = JSON.stringify({
-        ref: bookingRef,
-        event: event.title,
-        customer: customerDetails.name,
-        date: item.selectedSlot?.date,
-        slot: `${item.selectedSlot?.startTime} - ${item.selectedSlot?.endTime}`,
-        guests: item.guestsCount,
-        package: item.packageDetails?.name,
-      });
-
-      const qrCodeDataUrl = await QRCode.toDataURL(qrDataPayload, {
-        errorCorrectionLevel: "M",
-        width: 300,
-        margin: 2,
-        color: {
-          dark: "#0f172a",
-          light: "#ffffff",
-        },
-      });
-
-      // Calculate booking item total
-      const pkgTotal = (item.packageDetails?.price || 0) * (item.guestsCount || 1);
+      // Calculate booking item total (flat package tier fee + add-ons)
+      const pkgTotal = item.packageDetails?.price || 0;
       const addOnsTotal = (item.selectedAddOns || []).reduce(
         (sum: number, addOn: any) => sum + (addOn.total || addOn.unitPrice * addOn.quantity),
         0
@@ -110,7 +88,7 @@ export async function POST(req: NextRequest) {
         organiser: event.organiser,
         packageDetails: {
           packageId: item.packageDetails?.packageId || "pkg_default",
-          name: item.packageDetails?.name || "General Admission",
+          name: item.packageDetails?.name || "Celebration Package",
           price: item.packageDetails?.price || 0,
         },
         guestsCount: item.guestsCount || 1,
@@ -131,7 +109,9 @@ export async function POST(req: NextRequest) {
         totalAmount: bookingTotal,
         status: "confirmed",
         checkInStatus: "pending",
-        qrCodeData: qrCodeDataUrl,
+        qrCodeData: "",
+        bookingType: "online",
+        paymentMode: "Online / Razorpay",
         refundDetails: { status: "none", amount: 0 },
       });
 

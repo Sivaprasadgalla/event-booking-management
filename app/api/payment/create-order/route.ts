@@ -51,10 +51,10 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // Verify package price
+      // Verify package price (flat celebration package tier price)
       const pkg = event.packages.find((p) => p.id === item.packageDetails.packageId);
       const pkgPrice = pkg ? pkg.price : item.packageDetails.price;
-      const packageCost = pkgPrice * (item.guestsCount || 1);
+      const packageCost = pkgPrice;
 
       // Verify add-on prices
       let addonsCost = 0;

@@ -68,7 +68,8 @@ function calculateItemTotal(
   guests: number,
   addOns: CartAddOn[]
 ): number {
-  const pkgCost = packagePrice * guests;
+  // Flat package fee includes designated guests up to package capacity
+  const pkgCost = packagePrice;
   const addonsCost = addOns.reduce((sum, a) => sum + a.unitPrice * a.quantity, 0);
   return pkgCost + addonsCost;
 }

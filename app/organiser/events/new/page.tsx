@@ -30,6 +30,8 @@ import {
   Image as ImageIcon,
   X,
   Loader2,
+  Phone,
+  MessageCircle,
 } from "lucide-react";
 
 const VENUE_TYPES = [
@@ -175,6 +177,16 @@ export default function CreateEventWizardPage() {
         maxPerBooking: 1,
       },
     ],
+    contactInfo: {
+      contactPerson: "",
+      phone: "",
+      whatsapp: "",
+      email: "",
+    },
+    termsAndConditionsText:
+      "Decor setup is permitted 60 minutes prior to shift commencement.\nOutside catering and sound adhere to local venue noise curfew guidelines.\nAdvance booking deposit confirms your shift reservation.",
+    policyText:
+      "Rescheduling is permitted up to 3 days prior to your celebration reservation date subject to shift availability.\nCancellations made 3+ days in advance receive an 85% refund.",
     termsAndConditions: [
       "Decor setup is permitted 60 minutes prior to shift commencement.",
       "Catering sanitation and outside sound adhere to local venue guidelines.",
@@ -191,6 +203,18 @@ export default function CreateEventWizardPage() {
     if (!isLoading && (!user || (user.role !== "organiser" && user.role !== "admin"))) {
       router.push("/login");
       return;
+    }
+
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        contactInfo: {
+          contactPerson: prev.contactInfo.contactPerson || user.name || "",
+          phone: prev.contactInfo.phone || user.phone || "",
+          whatsapp: prev.contactInfo.whatsapp || user.phone || "",
+          email: prev.contactInfo.email || user.email || "",
+        },
+      }));
     }
 
     fetch("/api/categories")
@@ -415,11 +439,21 @@ export default function CreateEventWizardPage() {
     setErrorMessage("");
 
     try {
+      // Parse multi-line textarea terms into array
+      const termsArray = formData.termsAndConditionsText
+        ? formData.termsAndConditionsText
+            .split("\n")
+            .map((t) => t.trim())
+            .filter(Boolean)
+        : formData.termsAndConditions;
+
       const res = await fetch("/api/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
+          termsAndConditions: termsArray,
+          policyText: formData.policyText,
           submitForApproval,
         }),
       });
@@ -604,6 +638,94 @@ export default function CreateEventWizardPage() {
                   placeholder="Describe your venue ambiance, sound setup, lighting, catering facilities, privacy, and celebratory vibe..."
                   className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 text-sm outline-none focus:border-purple-500 transition"
                 />
+              </div>
+
+              {/* Host & Customer Inquiries Contact Details */}
+              <div className="pt-4 border-t border-white/10 space-y-4">
+                <div>
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-purple-400" />
+                    <span>Host & Customer Inquiries Contact Information</span>
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    This contact info will be prominently displayed on your venue listing and booking vouchers so customers can call or WhatsApp you directly.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-300 block">
+                      Host Contact Person / Manager Name
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.contactInfo.contactPerson}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          contactInfo: { ...formData.contactInfo, contactPerson: e.target.value },
+                        })
+                      }
+                      placeholder="e.g. Rohan Sharma (Venue Manager)"
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-white text-xs outline-none focus:border-purple-500 transition"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-300 block">
+                      Host Contact Phone *
+                    </label>
+                    <input
+                      type="tel"
+                      value={formData.contactInfo.phone}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          contactInfo: { ...formData.contactInfo, phone: e.target.value },
+                        })
+                      }
+                      placeholder="e.g. +91 98765 43210"
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-white text-xs outline-none focus:border-purple-500 transition"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-300 block">
+                      Host WhatsApp Number (For Direct Guest Chat)
+                    </label>
+                    <input
+                      type="tel"
+                      value={formData.contactInfo.whatsapp}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          contactInfo: { ...formData.contactInfo, whatsapp: e.target.value },
+                        })
+                      }
+                      placeholder="e.g. +91 98765 43210"
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-white text-xs outline-none focus:border-purple-500 transition"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-300 block">
+                      Host Email Address
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.contactInfo.email}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          contactInfo: { ...formData.contactInfo, email: e.target.value },
+                        })
+                      }
+                      placeholder="e.g. bookings@venueparty.com"
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-white text-xs outline-none focus:border-purple-500 transition"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -921,7 +1043,7 @@ export default function CreateEventWizardPage() {
               <div>
                 <h2 className="text-lg font-bold text-white">Celebration Packages & Pricing</h2>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Configure your package tiers (e.g. Silver Soirée, Gold Gala, Diamond Exclusive Buyout).
+                  Configure flat celebration packages with included perks (e.g. Up to 10 guests, 1kg cake, decoration, and food). Extra services can be added as Add-ons.
                 </p>
               </div>
               <button
@@ -1191,6 +1313,41 @@ export default function CreateEventWizardPage() {
                   </div>
                 </div>
               )}
+
+              {/* Detailed Cancellation & Rescheduling Policy Textarea */}
+              <div className="space-y-1.5 pt-2">
+                <label className="text-xs font-semibold text-slate-300 block">
+                  Detailed Cancellation & Rescheduling Policy (Multi-line)
+                </label>
+                <p className="text-[11px] text-slate-400">
+                  Specify cancellation rules, advance notice needed, and rescheduling policies for party hosts.
+                </p>
+                <textarea
+                  rows={3}
+                  value={formData.policyText}
+                  onChange={(e) => setFormData({ ...formData, policyText: e.target.value })}
+                  placeholder="e.g. Rescheduling is permitted up to 3 days prior to your celebration reservation date subject to shift availability. Cancellations made 3+ days in advance receive an 85% refund."
+                  className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white placeholder:text-slate-500 text-xs outline-none focus:border-purple-500 transition leading-relaxed"
+                />
+              </div>
+            </div>
+
+            {/* Venue Terms & Conditions & House Rules Textarea */}
+            <div className="pt-6 border-t border-white/10 space-y-3">
+              <div>
+                <h3 className="text-sm font-bold text-white">Venue Terms & Conditions & House Rules</h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Enter your venue house rules, decoration timings, sound curfew guidelines, and party policies (one per line).
+                </p>
+              </div>
+
+              <textarea
+                rows={5}
+                value={formData.termsAndConditionsText}
+                onChange={(e) => setFormData({ ...formData, termsAndConditionsText: e.target.value })}
+                placeholder="Decor setup is permitted 60 minutes prior to shift commencement.&#10;Outside sound and DJ music adhere to venue 11 PM curfew.&#10;Advance booking deposit is required to confirm reservation slot."
+                className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white placeholder:text-slate-500 text-xs outline-none focus:border-purple-500 transition leading-relaxed"
+              />
             </div>
 
             <div className="flex justify-between pt-4">
