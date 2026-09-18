@@ -223,7 +223,7 @@ export default function Navbar() {
                 </Link>
                 <Link
                   href="/register"
-                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-bold shadow-md shadow-purple-900/30 transition"
+                  className="hidden lg:flex px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-bold shadow-md shadow-purple-900/30 transition"
                 >
                   Register
                 </Link>
