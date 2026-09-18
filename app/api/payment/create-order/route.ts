@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { Event, Order, Setting } from "@/models";
 import { getUserFromRequest } from "@/lib/auth";
-import { createRazorpayOrder } from "@/lib/razorpay";
+import { createRazorpayOrder, isRazorpayConfigured, getRazorpayKeyId } from "@/lib/razorpay";
 import { generateOrderNumber } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
@@ -116,9 +116,8 @@ export async function POST(req: NextRequest) {
       orderId: pendingOrder._id.toString(),
       razorpayOrderId: razorpayOrder.id,
       amount: totalAmount,
-      currency,
-      keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_eventhub2026",
-      isSimulation: (razorpayOrder as any).isSimulation || false,
+      keyId: getRazorpayKeyId(),
+      isSimulation: (razorpayOrder as any).isSimulation || !isRazorpayConfigured(),
     });
   } catch (error: any) {
     console.error("Create payment order error:", error);

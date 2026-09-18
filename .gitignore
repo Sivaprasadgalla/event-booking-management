@@ -1,4 +1,4 @@
-﻿# dependencies
+# dependencies
 /node_modules
 /.pnp
 .pnp.js
@@ -39,3 +39,5 @@ Thumbs.db
 
 # vercel
 .vercel
+
+*.tsbuildinfo

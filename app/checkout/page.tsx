@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Script from "next/script";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
@@ -24,6 +23,24 @@ declare global {
   interface Window {
     Razorpay: any;
   }
+}
+
+function loadRazorpayScript(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (typeof window === "undefined") return resolve(false);
+    if (window.Razorpay) return resolve(true);
+
+    const existing = document.getElementById("razorpay-sdk-script");
+    if (existing) return resolve(true);
+
+    const script = document.createElement("script");
+    script.id = "razorpay-sdk-script";
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
 }
 
 export default function CheckoutPage() {
@@ -84,9 +101,49 @@ export default function CheckoutPage() {
         throw new Error(orderData.error || "Failed to initialize order");
       }
 
-      const { razorpayOrderId, orderNumber, orderId, keyId } = orderData;
+      const { razorpayOrderId, orderNumber, orderId, keyId, isSimulation } = orderData;
 
-      // 2. Trigger Razorpay Client Popup
+      // 1. If simulated order or no valid key, complete booking directly without loading Razorpay
+      if (
+        isSimulation ||
+        !keyId ||
+        keyId.includes("placeholder") ||
+        keyId.includes("eventhub2026") ||
+        keyId === "rzp_test_dummy"
+      ) {
+        toast.info("Processing reservation verification...", "Instant Confirmation");
+        const verifyRes = await fetch("/api/payment/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId,
+            orderNumber,
+            razorpayOrderId,
+            razorpayPaymentId: `pay_sim_${Date.now()}`,
+            razorpaySignature: `sig_sim_${Date.now()}`,
+            items,
+            customerDetails,
+          }),
+        });
+
+        const verifyData = await verifyRes.json();
+        if (!verifyRes.ok) {
+          throw new Error(verifyData.error || "Payment verification failed");
+        }
+
+        toast.success("Reservation confirmed! Your celebration is locked in.", "Celebration Booked");
+        clearCart();
+        router.push(`/booking-confirmation/${orderId}`);
+        return;
+      }
+
+      // 2. Load Razorpay script on-demand ONLY when a real transaction is triggered
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded || !window.Razorpay) {
+        throw new Error("Unable to connect to Razorpay payment gateway. Please check your internet connection.");
+      }
+
+      // 3. Trigger Razorpay Client Popup
       const options = {
         key: keyId,
         amount: Math.round(totalAmount * 100),
@@ -140,13 +197,9 @@ export default function CheckoutPage() {
         },
       };
 
-      if (!window.Razorpay) {
-        throw new Error("Razorpay payment gateway SDK is loading. Please retry in a moment.");
-      }
-
       const razorpayInstance = new window.Razorpay(options);
       razorpayInstance.on("payment.failed", function (response: any) {
-        setErrorMessage(`Payment failed: ${response.error.description}`);
+        setErrorMessage(`Payment failed: ${response.error?.description || "Transaction declined"}`);
         setProcessing(false);
       });
 
@@ -161,10 +214,7 @@ export default function CheckoutPage() {
   if (items.length === 0) return null;
 
   return (
-    <>
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
-
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
         <div>
           <h1 className="text-3xl sm:text-4xl font-heading font-extrabold text-white tracking-tight">
             Checkout & Confirmation
@@ -351,6 +401,5 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
-    </>
   );
 }

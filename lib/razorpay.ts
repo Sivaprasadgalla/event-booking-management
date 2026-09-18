@@ -1,15 +1,34 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
 
-const keyId = process.env.RAZORPAY_KEY_ID || "rzp_test_eventhub2026";
-const keySecret = process.env.RAZORPAY_KEY_SECRET || "secret_test_eventhub2026";
+const keyId =
+  process.env.RAZORPAY_KEY_ID ||
+  process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
+  "";
+const keySecret = process.env.RAZORPAY_KEY_SECRET || "";
+
+export const isDemoMode =
+  !keyId ||
+  !keySecret ||
+  keyId.includes("placeholder") ||
+  keyId.includes("eventhub2026");
+
+export function isRazorpayConfigured(): boolean {
+  return !isDemoMode;
+}
+
+export function getRazorpayKeyId(): string {
+  return (
+    process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
+    process.env.RAZORPAY_KEY_ID ||
+    ""
+  );
+}
 
 export const razorpayClient = new Razorpay({
-  key_id: keyId,
-  key_secret: keySecret,
+  key_id: keyId || "rzp_test_dummy",
+  key_secret: keySecret || "secret_dummy",
 });
-
-export const isDemoMode = keyId.includes("placeholder") || keyId.includes("eventhub2026");
 
 export async function createRazorpayOrder({
   amount, // in rupees
