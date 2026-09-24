@@ -68,38 +68,38 @@ export default function OrganiserDashboardPage() {
   const recentBookings = data?.recentBookings || [];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 space-y-10">
-      {/* Top Header & Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl sm:text-4xl font-heading font-extrabold text-white tracking-tight">
-              Venue Host Studio
-            </h1>
-            <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-400/10 border border-amber-400/20 text-amber-300">
+    <div className="max-w-7xl mx-auto space-y-8">
+      {/* Host Studio Live Banner */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-purple-600/15 via-indigo-950/40 to-pink-600/10 border border-purple-500/20 backdrop-blur-xl">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-bold text-xs uppercase tracking-wider">
               {user?.companyName || user?.name}
             </span>
+            <span className="text-xs text-slate-400">• Live Operations Desk</span>
           </div>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1.5">
-            Monitor sales velocity, review venue capacity, analyze party shifts, and supervise guest admissions.
+          <h2 className="text-xl sm:text-2xl font-heading font-black text-white">
+            Celebration Performance & Bookings Velocity
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-400">
+            Track gross pass sales, monitor shift reservations, and admit guests with fast QR verification.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <Link
             href="/organiser/bookings"
-            className="px-4 py-3 rounded-xl border border-white/10 hover:bg-white/5 text-slate-200 text-xs sm:text-sm font-heading font-bold flex items-center gap-2 transition"
+            className="px-4 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-slate-200 text-xs font-heading font-bold flex items-center gap-2 transition"
           >
             <Ticket className="w-4 h-4 text-amber-400" />
-            <span>Attendee Check-In</span>
+            <span>Check-in Desk</span>
           </Link>
-
           <Link
             href="/organiser/events/new"
-            className="px-5 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs sm:text-sm font-heading font-bold flex items-center gap-2 shadow-lg shadow-amber-500/20 transition"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-heading font-bold flex items-center gap-2 shadow-lg shadow-purple-900/30 transition"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>List New Venue</span>
+            <span>+ List New Space</span>
           </Link>
         </div>
       </div>

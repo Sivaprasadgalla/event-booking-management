@@ -14,3 +14,4 @@ export { Booking, type IBooking, type ISelectedAddOn, type IRefundDetails } from
 export { Review, type IReview } from "./Review";
 export { Setting, type ISetting } from "./Setting";
 export { SlotHold, type ISlotHold } from "./SlotHold";
+export { CmsContent, type ICmsContent } from "./CmsContent";

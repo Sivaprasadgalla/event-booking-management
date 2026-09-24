@@ -3,7 +3,7 @@ import { connectToDatabase } from "@/lib/db";
 import { Event, Order, Setting } from "@/models";
 import { getUserFromRequest } from "@/lib/auth";
 import { createRazorpayOrder, isRazorpayConfigured, getRazorpayKeyId } from "@/lib/razorpay";
-import { generateOrderNumber } from "@/lib/utils";
+import { generateOrderNumber, isSlotStarted } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,6 +33,20 @@ export async function POST(req: NextRequest) {
       if (!event || event.status !== "published") {
         return NextResponse.json(
           { error: `Event "${item.eventTitle || 'Selected event'}" is no longer available` },
+          { status: 400 }
+        );
+      }
+
+      // Check if slot has already started
+      if (
+        item.selectedSlot?.date &&
+        item.selectedSlot?.startTime &&
+        isSlotStarted(item.selectedSlot.date, item.selectedSlot.startTime)
+      ) {
+        return NextResponse.json(
+          {
+            error: `The celebration shift for "${event.title}" on ${item.selectedSlot.date} (${item.selectedSlot.startTime}) has already started and cannot be booked.`,
+          },
           { status: 400 }
         );
       }

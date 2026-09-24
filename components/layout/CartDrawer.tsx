@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { useToast } from "@/context/ToastContext";
 import { formatPrice, formatEventDate } from "@/lib/utils";
@@ -20,6 +20,10 @@ import {
 } from "lucide-react";
 
 export default function CartDrawer() {
+  const pathname = usePathname();
+  if (pathname?.startsWith("/admin") || pathname?.startsWith("/organiser")) {
+    return null;
+  }
   const {
     items,
     isDrawerOpen,

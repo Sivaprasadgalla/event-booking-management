@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { useToast } from "@/context/ToastContext";
-import { formatPrice, formatEventDate } from "@/lib/utils";
+import { formatPrice, formatEventDate, isSlotStarted } from "@/lib/utils";
 import {
   ShoppingBag,
   Trash2,
@@ -19,6 +19,7 @@ import {
   Ticket,
   ShieldCheck,
   Building2,
+  AlertCircle,
 } from "lucide-react";
 
 export default function CartPage() {
@@ -51,6 +52,9 @@ export default function CartPage() {
   };
 
   const finalTotal = Math.max(0, totalAmount - discount);
+  const hasExpiredItems = items.some((i) =>
+    isSlotStarted(i.selectedSlot?.date, i.selectedSlot?.startTime)
+  );
 
   if (items.length === 0) {
     return (
@@ -60,7 +64,7 @@ export default function CartPage() {
         </div>
         <h2 className="text-3xl font-heading font-extrabold text-white">Your Cart is Empty</h2>
         <p className="text-sm sm:text-base text-slate-400 max-w-md mx-auto leading-relaxed">
-          You haven't reserved any celebration venues yet. Explore luxury rooftop lounges, private villas, beachfront lawns, and banquet estates.
+          You haven&apos;t reserved any celebration venues yet. Explore luxury rooftop lounges, private villas, beachfront lawns, and banquet estates.
         </p>
         <Link
           href="/events"
@@ -82,7 +86,7 @@ export default function CartPage() {
             Celebration Cart
           </h1>
           <p className="text-sm sm:text-base text-slate-400 mt-1">
-            {items.length} venue experience(s) selected across {new Set(items.map((i) => i.organiserName)).size} venue host(s)
+            {items.length} venue experience(s) selected
           </p>
         </div>
 
@@ -100,44 +104,84 @@ export default function CartPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Cart items list */}
         <div className="lg:col-span-2 space-y-5">
-          {items.map((item) => (
-            <div
-              key={item.id}
-              className="bg-slate-900/60 border border-white/10 rounded-3xl p-6 backdrop-blur-xl shadow-xl space-y-5 relative transition hover:border-amber-400/20"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                <div className="flex gap-4 sm:gap-5">
-                  <img
-                    src={item.eventCoverImage}
-                    alt={item.eventTitle}
-                    className="w-24 h-24 rounded-2xl object-cover border border-white/10 shrink-0"
-                  />
-                  <div className="space-y-1.5">
-                    <div className="text-xs font-semibold text-amber-400 flex items-center gap-1.5">
-                      <Building2 className="w-3.5 h-3.5" />
-                      Hosted by {item.organiserName}
-                    </div>
-                    <Link href={`/events/${item.eventSlug}`}>
-                      <h3 className="font-heading font-bold text-lg text-white hover:text-amber-400 transition line-clamp-1">
-                        {item.eventTitle}
-                      </h3>
-                    </Link>
-                    <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-slate-400 pt-1">
-                      <span className="flex items-center gap-1.5">
-                        <MapPin className="w-4 h-4 text-slate-400" />
-                        {item.venueName}, {item.city}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <Calendar className="w-4 h-4 text-slate-400" />
-                        {formatEventDate(item.selectedSlot.date, "EEE, dd MMM yyyy")}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <Clock className="w-4 h-4 text-slate-400" />
-                        {item.selectedSlot.startTime} - {item.selectedSlot.endTime}
-                      </span>
+          {hasExpiredItems && (
+            <div className="p-4 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-200 text-xs flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
+              <div>
+                <div className="font-bold text-rose-300">Action Required: Shift Started</div>
+                <div className="text-[11px] text-slate-300">
+                  One or more celebration shifts in your cart have already started. Please remove them to proceed to checkout.
+                </div>
+              </div>
+            </div>
+          )}
+
+          {items.map((item) => {
+            const isItemExpired = isSlotStarted(
+              item.selectedSlot?.date,
+              item.selectedSlot?.startTime
+            );
+
+            return (
+              <div
+                key={item.id}
+                className={`border rounded-3xl p-6 backdrop-blur-xl shadow-xl space-y-5 relative transition ${
+                  isItemExpired
+                    ? "bg-rose-950/20 border-rose-500/30"
+                    : "bg-slate-900/60 border-white/10 hover:border-amber-400/20"
+                }`}
+              >
+                {isItemExpired && (
+                  <div className="p-3 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center justify-between gap-3">
+                    <span className="flex items-center gap-2 font-bold">
+                      <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                      This celebration shift has already started and cannot be booked.
+                    </span>
+                    <button
+                      onClick={() => {
+                        removeItem(item.id);
+                        toast.info(`Removed expired shift "${item.eventTitle}"`);
+                      }}
+                      className="px-3 py-1 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/30 text-rose-200 font-bold text-xs transition shrink-0"
+                    >
+                      Remove Shift
+                    </button>
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                  <div className="flex gap-4 sm:gap-5">
+                    <img
+                      src={item.eventCoverImage}
+                      alt={item.eventTitle}
+                      className="w-24 h-24 rounded-2xl object-cover border border-white/10 shrink-0"
+                    />
+                    <div className="space-y-1.5">
+                      <div className="text-xs font-semibold text-amber-400 flex items-center gap-1.5">
+                        <Building2 className="w-3.5 h-3.5" />
+                        Hosted by {item.organiserName}
+                      </div>
+                      <Link href={`/events/${item.eventSlug}`}>
+                        <h3 className={`font-heading font-bold text-lg hover:text-amber-400 transition line-clamp-1 ${isItemExpired ? "text-slate-400 line-through" : "text-white"}`}>
+                          {item.eventTitle}
+                        </h3>
+                      </Link>
+                      <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-slate-400 pt-1">
+                        <span className="flex items-center gap-1.5">
+                          <MapPin className="w-4 h-4 text-slate-400" />
+                          {item.venueName}, {item.city}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <Calendar className="w-4 h-4 text-slate-400" />
+                          {formatEventDate(item.selectedSlot.date, "EEE, dd MMM yyyy")}
+                        </span>
+                        <span className={`flex items-center gap-1.5 ${isItemExpired ? "text-rose-400 font-bold" : "text-slate-400"}`}>
+                          <Clock className="w-4 h-4" />
+                          {item.selectedSlot.startTime} - {item.selectedSlot.endTime}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
                 <button
                   onClick={() => {
@@ -216,8 +260,9 @@ export default function CartPage() {
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+          );
+        })}
+      </div>
 
         {/* Order Summary Card */}
         <div className="space-y-6">
@@ -284,10 +329,20 @@ export default function CartPage() {
             </div>
 
             <button
-              onClick={() => router.push("/checkout")}
-              className="w-full py-4 px-5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-heading font-bold text-sm shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 transition"
+              onClick={() => {
+                if (hasExpiredItems) {
+                  toast.error(
+                    "Please remove expired shift(s) from your cart before proceeding to checkout.",
+                    "Expired Shift"
+                  );
+                  return;
+                }
+                router.push("/checkout");
+              }}
+              disabled={hasExpiredItems}
+              className="w-full py-4 px-5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-heading font-bold text-sm shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span>Proceed to Checkout</span>
+              <span>{hasExpiredItems ? "Remove Expired Shift(s) to Proceed" : "Proceed to Checkout"}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
 

@@ -31,6 +31,7 @@ import {
   AlertCircle,
   Lock,
 } from "lucide-react";
+import { isSlotStarted } from "@/lib/utils";
 
 export interface TimeSlotOption {
   id: string;
@@ -312,7 +313,7 @@ export default function ModernCalendar({
                 </p>
               </div>
               <span className="text-xs font-semibold px-3 py-1 bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-full shrink-0">
-                {activeSlots.length} shifts open
+                {activeSlots.filter((s) => !isSlotStarted(selectedDate, s.startTime)).length} open shifts
               </span>
             </div>
 
@@ -321,6 +322,9 @@ export default function ModernCalendar({
               {activeSlots.map((slot) => {
                 const isSelected = selectedSlotId === slot.id;
                 const slotShift = slot.slotType || "evening";
+
+                // Check if slot start time has already passed on this date
+                const hasStarted = isSlotStarted(selectedDate, slot.startTime);
 
                 // Check active hold status
                 const hold = (activeHolds || []).find(
@@ -334,7 +338,7 @@ export default function ModernCalendar({
                   (s) => s.id === slot.id && s.date === selectedDate
                 );
                 const isSoldOut = Boolean(sched && sched.bookedCount >= sched.capacity);
-                const isBlocked = isHeldByOther || isSoldOut;
+                const isBlocked = hasStarted || isHeldByOther || isSoldOut;
 
                 return (
                   <motion.div
@@ -353,7 +357,9 @@ export default function ModernCalendar({
                       }
                     }}
                     className={`p-5 rounded-2xl border-2 transition-all relative flex flex-col justify-between space-y-3 ${
-                      isHeldByOther
+                      hasStarted
+                        ? "opacity-35 cursor-not-allowed bg-slate-950/70 border-slate-800/80 grayscale"
+                        : isHeldByOther
                         ? "opacity-60 cursor-not-allowed bg-slate-900/60 border-dashed border-amber-500/40"
                         : isSoldOut
                         ? "opacity-50 cursor-not-allowed bg-slate-900/60 border-rose-500/30"
@@ -366,11 +372,11 @@ export default function ModernCalendar({
                       <div className="space-y-1.5">
                         <div className="flex items-center gap-2">
                           {SHIFT_ICONS[slotShift] || <Clock className="w-4 h-4 text-purple-400" />}
-                          <span className="text-sm font-heading font-bold text-white line-clamp-1">
+                          <span className={`text-sm font-heading font-bold line-clamp-1 ${hasStarted ? "text-slate-400 line-through" : "text-white"}`}>
                             {slot.title}
                           </span>
                         </div>
-                        <div className="text-xs font-semibold text-purple-300 flex items-center gap-1.5">
+                        <div className={`text-xs font-semibold flex items-center gap-1.5 ${hasStarted ? "text-slate-400" : "text-purple-300"}`}>
                           <span>
                             {slot.startTime} – {slot.endTime}
                           </span>
@@ -378,7 +384,12 @@ export default function ModernCalendar({
                       </div>
 
                       <div className="shrink-0">
-                        {isHeldByOther ? (
+                        {hasStarted ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+                            <Clock className="w-3 h-3 text-slate-400" />
+                            <span>Shift Started</span>
+                          </span>
+                        ) : isHeldByOther ? (
                           <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
                             <Lock className="w-3 h-3" />
                             <span>Reserved (In Cart)</span>
@@ -403,7 +414,12 @@ export default function ModernCalendar({
                     </div>
 
                     <div className="flex items-center justify-between pt-2 border-t border-white/10 text-xs text-slate-400">
-                      {isHeldByOther ? (
+                      {hasStarted ? (
+                        <span className="text-slate-400 font-medium text-[11px] flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3 text-slate-400" />
+                          Shift started at {slot.startTime} (booking closed)
+                        </span>
+                      ) : isHeldByOther ? (
                         <span className="text-amber-400 font-semibold text-[11px] flex items-center gap-1">
                           <Lock className="w-3 h-3" />
                           Reserved by another guest (10m hold)

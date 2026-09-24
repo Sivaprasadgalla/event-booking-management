@@ -1,7 +1,8 @@
 import React from "react";
 import Link from "next/link";
 import { connectToDatabase } from "@/lib/db";
-import { Event, Category } from "@/models";
+import { Event, Category, CmsContent } from "@/models";
+import { DEFAULT_CMS_DATA } from "@/lib/defaultCms";
 import { seedDatabase } from "@/lib/seedData";
 import EventCard from "@/components/events/EventCard";
 import {
@@ -36,11 +37,12 @@ export default async function HomePage() {
   let categories: any[] = [];
   let featuredEvents: any[] = [];
   let trendingEvents: any[] = [];
+  let cmsData = DEFAULT_CMS_DATA;
 
   try {
     await connectToDatabase();
 
-    [categories, featuredEvents, trendingEvents] = await Promise.all([
+    const [catRes, featRes, trendRes, cmsRes] = await Promise.all([
       Category.find({ isActive: true }).lean(),
       Event.find({ status: "published", isFeatured: true })
         .populate("category", "name slug")
@@ -53,7 +55,15 @@ export default async function HomePage() {
         .sort({ reviewCount: -1, averageRating: -1 })
         .limit(6)
         .lean(),
+      CmsContent.findOne().lean(),
     ]);
+
+    categories = catRes;
+    featuredEvents = featRes;
+    trendingEvents = trendRes;
+    if (cmsRes) {
+      cmsData = cmsRes as any;
+    }
 
     if (categories.length === 0 || trendingEvents.length === 0) {
       await seedDatabase();
@@ -76,6 +86,9 @@ export default async function HomePage() {
     console.warn("Database connection pending");
   }
 
+  const hero = cmsData.hero || DEFAULT_CMS_DATA.hero;
+  const occasionsList = cmsData.occasions && cmsData.occasions.length > 0 ? cmsData.occasions : OCCASIONS;
+
   return (
     <div className="space-y-24 pb-28 relative overflow-hidden bg-slate-950 text-slate-100">
       {/* Background Ambient Glow Orbs */}
@@ -87,31 +100,30 @@ export default async function HomePage() {
       <section className="relative z-10 pt-24 pb-14 px-4 sm:px-6 lg:px-8 text-center max-w-5xl mx-auto space-y-8">
         <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs sm:text-sm font-bold tracking-wide backdrop-blur-md shadow-lg shadow-purple-950/40">
           <PartyPopper className="w-4 h-4 text-purple-400" />
-          <span>India's Premier Venue & Celebration Partner Marketplace</span>
+          <span>{hero.badgeText || "India's Premier Venue & Celebration Partner Marketplace"}</span>
         </div>
 
         <h1 className="text-4xl sm:text-6xl lg:text-7xl font-heading font-black tracking-tight leading-[1.08] text-white">
-          Celebrate Life's Moments at{" "}
+          {hero.title || "Celebrate Life's Moments at"}{" "}
           <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300 bg-clip-text text-transparent">
-            Dream Venues.
+            {hero.highlightedTitle || "Dream Venues."}
           </span>
         </h1>
 
         <p className="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto font-normal leading-relaxed">
-          From high-energy birthday parties and romantic anniversaries to private poolside farmhouses
-          and skyline rooftop soirées. Choose a date on our interactive calendar, customize your celebration package,
-          and book instantly.
+          {hero.subtitle ||
+            "From high-energy birthday parties and romantic anniversaries to private poolside farmhouses and skyline rooftop soirées. Choose a date on our interactive calendar, customize your celebration package, and book instantly."}
         </p>
 
         {/* Occasion Quick Chips */}
         <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-          {OCCASIONS.map((occ, idx) => (
+          {occasionsList.map((occ, idx) => (
             <Link
               key={idx}
               href={occ.href}
               className="px-4 py-2.5 rounded-2xl bg-slate-900/80 hover:bg-purple-900/30 border border-white/10 hover:border-purple-500/50 text-slate-200 hover:text-white text-xs sm:text-sm font-semibold flex items-center gap-2.5 backdrop-blur-md transition shadow-md"
             >
-              {occ.icon}
+              <Sparkles className="w-4 h-4 text-purple-400" />
               <span>{occ.label}</span>
             </Link>
           ))}
@@ -120,19 +132,31 @@ export default async function HomePage() {
         {/* Action Buttons */}
         <div className="pt-4 flex flex-wrap items-center justify-center gap-4">
           <Link
-            href="/events"
+            href={hero.primaryCta?.href || "/events"}
             className="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-sm sm:text-base shadow-xl shadow-purple-900/40 flex items-center gap-2 transition hover:scale-[1.02]"
           >
-            <span>Explore All Venues</span>
+            <span>{hero.primaryCta?.label || "Explore All Venues"}</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
-            href="/register"
+            href={hero.secondaryCta?.href || "/register"}
             className="px-8 py-3.5 rounded-2xl bg-slate-900/80 hover:bg-white/10 border border-white/15 text-slate-200 hover:text-white font-bold text-sm sm:text-base backdrop-blur-md transition hover:scale-[1.02]"
           >
-            Become a Hosting Partner
+            {hero.secondaryCta?.label || "Become a Hosting Partner"}
           </Link>
         </div>
+
+        {/* Hero Stats */}
+        {hero.stats && hero.stats.length > 0 && (
+          <div className="pt-6 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto border-t border-white/10">
+            {hero.stats.map((stat, sIdx) => (
+              <div key={sIdx} className="space-y-0.5">
+                <div className="text-xl sm:text-2xl font-black font-heading text-white">{stat.value}</div>
+                <div className="text-xs text-slate-400">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Featured Venues & Partners */}

@@ -3,8 +3,17 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useToast } from "@/context/ToastContext";
-import { Mail, ArrowLeft, KeyRound, CheckCircle2, Sparkles, ArrowRight, Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
+import {
+  PartyPopper,
+  Mail,
+  ArrowLeft,
+  KeyRound,
+  CheckCircle2,
+  Sparkles,
+  ArrowRight,
+  Loader2,
+  ShieldCheck,
+} from "lucide-react";
 
 export default function ForgotPasswordPage() {
   const { toast } = useToast();
@@ -50,40 +59,99 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-slate-900/80 border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-2xl shadow-2xl space-y-6"
-        >
+    <div className="min-h-screen flex items-stretch bg-slate-950 text-slate-100">
+      {/* Brand & Showcase Sidebar */}
+      <div className="hidden lg:flex lg:w-5/12 xl:w-1/2 relative bg-gradient-to-br from-slate-900 via-amber-950/20 to-purple-950/40 p-12 flex-col justify-between border-r border-white/10 overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-600/15 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-purple-600/15 rounded-full blur-[140px] pointer-events-none" />
+
+        {/* Top brand */}
+        <div className="relative z-10">
+          <Link href="/" className="inline-flex items-center gap-3 group">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-purple-600 via-pink-600 to-amber-500 flex items-center justify-center text-white shadow-lg shadow-purple-900/40 group-hover:scale-105 transition">
+              <PartyPopper className="w-6 h-6" />
+            </div>
+            <div className="flex flex-col">
+              <span className="font-heading font-extrabold text-xl text-white tracking-tight">
+                Celebrate<span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Hub</span>
+              </span>
+              <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">
+                Account Recovery
+              </span>
+            </div>
+          </Link>
+        </div>
+
+        {/* Feature Hero */}
+        <div className="relative z-10 space-y-6 max-w-md">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-semibold">
+            <ShieldCheck className="w-4 h-4" />
+            <span>Secure Password Recovery</span>
+          </div>
+
+          <h2 className="text-3xl xl:text-4xl font-heading font-black text-white leading-tight">
+            Never Miss a Planned Celebration.
+          </h2>
+
+          <p className="text-sm text-slate-400 leading-relaxed">
+            Quickly recover access to your booked private rooftop lounges, party farmhouses,
+            and organizer management studio with our zero-knowledge password reset links.
+          </p>
+        </div>
+
+        {/* Bottom security pill */}
+        <div className="relative z-10 text-xs text-slate-500 flex items-center gap-2 border-t border-white/5 pt-6">
+          <Sparkles className="w-4 h-4 text-amber-400" />
+          <span>One-time cryptographic tokens expire strictly in 60 minutes</span>
+        </div>
+      </div>
+
+      {/* Main Interactive Form Panel */}
+      <div className="flex-1 flex flex-col justify-between p-6 sm:p-10 lg:p-16 relative overflow-y-auto">
+        {/* Back navigation button */}
+        <div className="flex items-center justify-between">
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-400 hover:text-white transition px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Sign In</span>
+          </Link>
+
+          <Link href="/" className="lg:hidden inline-flex items-center gap-2">
+            <span className="font-heading font-extrabold text-base text-white">
+              Celebrate<span className="text-purple-400">Hub</span>
+            </span>
+          </Link>
+        </div>
+
+        {/* Form Container */}
+        <div className="max-w-md w-full mx-auto my-auto py-8 space-y-6">
           <div className="text-center space-y-2">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-500 text-slate-950 flex items-center justify-center mx-auto shadow-lg shadow-amber-400/20">
+            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-4">
               <KeyRound className="w-7 h-7" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-white">
+            <h1 className="text-2xl sm:text-3xl font-heading font-black text-white">
               Forgot Password?
             </h1>
             <p className="text-xs sm:text-sm text-slate-400">
-              Enter your registered CelebrateHub email and we will generate a secure reset link.
+              Enter your registered Gmail or email address to generate a secure recovery link.
             </p>
           </div>
 
           {!submittedSuccess ? (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                  Registered Email Address
-                </label>
+                <label className="text-xs font-bold text-slate-300">Registered Email Address</label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-4 top-3.5 pointer-events-none" />
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white text-sm font-medium focus:border-amber-400 outline-none"
+                    placeholder="name@example.com"
+                    className="w-full pl-11 pr-4 py-3 rounded-2xl border border-white/10 bg-slate-900 text-white text-sm outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition placeholder:text-slate-500"
                   />
                 </div>
               </div>
@@ -91,11 +159,12 @@ export default function ForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-heading font-extrabold text-sm shadow-xl shadow-amber-400/20 transition flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-pink-600 hover:from-amber-400 hover:to-pink-500 text-slate-950 font-heading font-bold text-sm shadow-xl shadow-amber-500/20 flex items-center justify-center gap-2 transition disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> Generating Link...
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Generating Link...</span>
                   </>
                 ) : (
                   <>
@@ -106,8 +175,8 @@ export default function ForgotPasswordPage() {
               </button>
             </form>
           ) : (
-            <div className="space-y-4 text-center">
-              <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs space-y-2 text-left">
+            <div className="space-y-4">
+              <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs space-y-2">
                 <div className="flex items-center gap-2 font-bold text-emerald-400">
                   <CheckCircle2 className="w-4 h-4" /> Reset Link Ready (Valid for 1 hour)
                 </div>
@@ -117,11 +186,11 @@ export default function ForgotPasswordPage() {
               </div>
 
               {resetUrl && (
-                <div className="space-y-2">
-                  <p className="text-xs text-slate-400">Click below to proceed with setting a new password:</p>
+                <div className="space-y-2 pt-2">
+                  <p className="text-xs text-slate-400 text-center">Click below to proceed to password reset:</p>
                   <Link
                     href={resetUrl}
-                    className="block w-full py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-heading font-bold text-sm shadow-lg transition text-center"
+                    className="block w-full py-3.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-heading font-bold text-sm shadow-lg shadow-amber-500/20 text-center transition"
                   >
                     Reset Password Now
                   </Link>
@@ -134,22 +203,18 @@ export default function ForgotPasswordPage() {
                   setSubmittedSuccess(false);
                   setResetUrl(null);
                 }}
-                className="text-xs text-slate-400 hover:text-white underline block mx-auto"
+                className="text-xs text-slate-400 hover:text-white underline block mx-auto pt-2"
               >
-                Send to a different email
+                Try a different email address
               </button>
             </div>
           )}
+        </div>
 
-          <div className="pt-2 border-t border-white/10 text-center">
-            <Link
-              href="/login"
-              className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-amber-400 transition font-medium"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" /> Back to Sign In
-            </Link>
-          </div>
-        </motion.div>
+        {/* Footer */}
+        <div className="text-center text-xs text-slate-500 pt-6">
+          CelebrateHub Marketplace &copy; 2026. Automated Account Recovery.
+        </div>
       </div>
     </div>
   );

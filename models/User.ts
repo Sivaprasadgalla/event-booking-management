@@ -10,6 +10,10 @@ export interface IUser extends Document {
   bio?: string;
   companyName?: string;
   isVerified: boolean;
+  verificationCode?: string;
+  verificationToken?: string;
+  verificationExpires?: Date;
+  savedCart?: any[];
   status: "active" | "suspended";
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
@@ -32,6 +36,10 @@ const UserSchema = new Schema<IUser>(
     bio: { type: String, default: "" },
     companyName: { type: String, default: "" },
     isVerified: { type: Boolean, default: false },
+    verificationCode: { type: String, select: false },
+    verificationToken: { type: String, select: false },
+    verificationExpires: { type: Date, select: false },
+    savedCart: { type: Array, default: [] },
     status: { type: String, enum: ["active", "suspended"], default: "active" },
     resetPasswordToken: { type: String, select: false },
     resetPasswordExpires: { type: Date, select: false },

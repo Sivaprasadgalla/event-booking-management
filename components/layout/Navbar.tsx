@@ -2,9 +2,10 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
+import { useCms } from "@/context/CmsContext";
 import {
   Sparkles,
   Search,
@@ -18,17 +19,34 @@ import {
   X,
   Building2,
   PartyPopper,
+  ArrowRight,
 } from "lucide-react";
 import ReservationTimer from "./ReservationTimer";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const { itemCount, openDrawer } = useCart();
+  const { cms } = useCms();
   const router = useRouter();
+  const pathname = usePathname();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+
+  // If in admin, organiser or customer portals, or in auth pages, DO NOT render public navbar
+  if (
+    pathname?.startsWith("/admin") ||
+    pathname?.startsWith("/organiser") ||
+    pathname?.startsWith("/customer") ||
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/verify-email" ||
+    pathname === "/forgot-password" ||
+    pathname === "/reset-password"
+  ) {
+    return null;
+  }
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,61 +56,82 @@ export default function Navbar() {
     }
   };
 
+  const navLinks = cms?.header?.navLinks || [];
+  const brandName = cms?.header?.brandName || "CelebrateHub";
+  const brandTagline = cms?.header?.brandTagline || "Venue & Hosting";
+  const searchPlaceholder = cms?.header?.searchPlaceholder || "Search rooftops, villas, banquets, occasions...";
+  const announcement = cms?.header?.announcement;
+
   return (
-    <header className="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-xl border-b border-white/10 text-white transition-all">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-4">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 via-pink-600 to-amber-500 flex items-center justify-center text-white shadow-lg shadow-purple-900/40 group-hover:scale-105 transition">
-              <PartyPopper className="w-5 h-5" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-heading font-extrabold text-lg leading-tight tracking-tight text-white flex items-center gap-1">
-                Celebrate<span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Hub</span>
-              </span>
-              <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">
-                Venue & Hosting
-              </span>
-            </div>
-          </Link>
+    <>
+      {/* Dynamic Announcement Bar */}
+      {announcement?.enabled && announcement?.text && (
+        <div className="bg-gradient-to-r from-purple-900/90 via-pink-900/90 to-purple-900/90 border-b border-purple-500/20 py-2 px-4 text-center text-xs text-slate-200 flex items-center justify-center gap-2">
+          <span>{announcement.text}</span>
+          {announcement.linkText && (
+            <Link
+              href={announcement.linkUrl || "/events"}
+              className="font-bold underline text-amber-300 hover:text-white flex items-center gap-0.5 ml-1"
+            >
+              <span>{announcement.linkText}</span>
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          )}
+        </div>
+      )}
 
-          {/* Search bar */}
-          <form
-            onSubmit={handleSearchSubmit}
-            className="hidden md:flex flex-1 max-w-sm lg:max-w-md relative items-center"
-          >
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search rooftops, villas, banquets, occasions..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm bg-white/5 border border-white/10 rounded-full text-white placeholder:text-slate-400 focus:bg-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition"
-            />
-          </form>
+      <header className="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-xl border-b border-white/10 text-white transition-all">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 gap-4">
+            {/* Dynamic Brand Logo */}
+            <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 via-pink-600 to-amber-500 flex items-center justify-center text-white shadow-lg shadow-purple-900/40 group-hover:scale-105 transition">
+                <PartyPopper className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-heading font-extrabold text-lg leading-tight tracking-tight text-white flex items-center gap-1">
+                  {brandName}
+                </span>
+                <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">
+                  {brandTagline}
+                </span>
+              </div>
+            </Link>
 
-          {/* Nav links */}
-          <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-slate-300">
-            <Link href="/events" className="hover:text-white transition">
-              All Venues
-            </Link>
-            <Link href="/events?category=rooftops" className="hover:text-white transition">
-              Rooftops
-            </Link>
-            <Link href="/events?category=farmhouses-villas" className="hover:text-white transition">
-              Farmhouses & Villas
-            </Link>
-            <Link href="/events?category=banquets" className="hover:text-white transition">
-              Banquets
-            </Link>
-            <Link href="/events?category=garden-lawns" className="hover:text-white transition">
-              Garden & Beach Lawns
-            </Link>
-          </nav>
+            {/* Dynamic Search bar */}
+            <form
+              onSubmit={handleSearchSubmit}
+              className="hidden md:flex flex-1 max-w-sm lg:max-w-md relative items-center"
+            >
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+              <input
+                type="text"
+                placeholder={searchPlaceholder}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 text-sm bg-white/5 border border-white/10 rounded-full text-white placeholder:text-slate-400 focus:bg-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition"
+              />
+            </form>
 
-          {/* Right Actions */}
-          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Dynamic Nav links */}
+            <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-slate-300">
+              {navLinks.map((link, idx) => (
+                <Link
+                  key={idx}
+                  href={link.href}
+                  className={`hover:text-white transition ${
+                    link.isHighlighted
+                      ? "text-amber-400 font-bold hover:text-amber-300"
+                      : "text-slate-300"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+
+            {/* Right Actions */}
+            <div className="flex items-center gap-2 sm:gap-3">
             {/* 10-Minute Reservation Hold Timer */}
             <ReservationTimer />
 
@@ -266,41 +305,20 @@ export default function Navbar() {
           </form>
 
           <div className="space-y-1.5 text-sm font-medium">
-            <Link
-              href="/events"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-slate-200 hover:bg-white/5"
-            >
-              <span>Explore All Venues</span>
-            </Link>
-            <Link
-              href="/events?category=rooftops"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5"
-            >
-              <span>Rooftops & Sky Lounges</span>
-            </Link>
-            <Link
-              href="/events?category=farmhouses-villas"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5"
-            >
-              <span>Private Farmhouses & Pool Villas</span>
-            </Link>
-            <Link
-              href="/events?category=banquets"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5"
-            >
-              <span>Grand Ballrooms & Banquets</span>
-            </Link>
-            <Link
-              href="/events?category=garden-lawns"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5"
-            >
-              <span>Garden & Beachfront Lawns</span>
-            </Link>
+            {navLinks.map((link, idx) => (
+              <Link
+                key={idx}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl transition ${
+                  link.isHighlighted
+                    ? "text-amber-400 font-bold bg-amber-400/10"
+                    : "text-slate-300 hover:bg-white/5"
+                }`}
+              >
+                <span>{link.label}</span>
+              </Link>
+            ))}
           </div>
 
           {/* Mobile Auth & Account Quick-links */}
@@ -380,5 +398,6 @@ export default function Navbar() {
         </div>
       )}
     </header>
-  );
+  </>
+);
 }

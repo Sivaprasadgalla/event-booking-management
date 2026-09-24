@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { connectToDatabase } from "@/lib/db";
 import { User } from "@/models";
-import { hashPassword, setSessionCookie } from "@/lib/auth";
+import { hashPassword } from "@/lib/auth";
+import { sendVerificationEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,7 +18,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const existing = await User.findOne({ email: email.toLowerCase().trim() });
+    const cleanEmail = email.toLowerCase().trim();
+    const existing = await User.findOne({ email: cleanEmail });
     if (existing) {
       return NextResponse.json(
         { error: "An account with this email address already exists" },
@@ -27,32 +30,44 @@ export async function POST(req: NextRequest) {
     const validRole = ["customer", "organiser"].includes(role) ? role : "customer";
     const hashedPassword = await hashPassword(password);
 
+    // Generate 6-digit verification code & crypto token
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
     const newUser = await User.create({
       name,
-      email: email.toLowerCase().trim(),
+      email: cleanEmail,
       password: hashedPassword,
       role: validRole,
       companyName: companyName || "",
       phone: phone || "",
-      isVerified: validRole === "customer",
+      isVerified: false,
+      verificationCode,
+      verificationToken: hashedToken,
+      verificationExpires,
       status: "active",
     });
 
-    const sessionPayload = {
-      id: newUser._id.toString(),
-      email: newUser.email,
-      name: newUser.name,
-      role: newUser.role,
-      companyName: newUser.companyName,
-    };
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin || "http://localhost:3000";
+    const verifyUrl = `${baseUrl}/verify-email?token=${rawToken}&email=${encodeURIComponent(cleanEmail)}`;
 
-    const response = NextResponse.json({
-      success: true,
-      user: sessionPayload,
-      message: "Account created successfully",
+    // Dispatch verification email
+    await sendVerificationEmail({
+      toEmail: cleanEmail,
+      name,
+      code: verificationCode,
+      verifyUrl,
     });
 
-    return setSessionCookie(response, sessionPayload);
+    return NextResponse.json({
+      success: true,
+      requiresVerification: true,
+      email: cleanEmail,
+      message: `Account created! We've sent a verification code to ${cleanEmail}. Please verify your Gmail.`,
+      demoCode: process.env.NODE_ENV !== "production" ? verificationCode : undefined,
+    });
   } catch (error: any) {
     console.error("Registration error:", error);
     return NextResponse.json(

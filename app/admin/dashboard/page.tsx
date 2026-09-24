@@ -64,21 +64,21 @@ export default function AdminDashboardPage() {
   const recentBookings = data?.recentBookings || [];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 space-y-10">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl sm:text-4xl font-heading font-extrabold text-white flex items-center gap-3">
-              <Shield className="w-8 h-8 text-amber-400" />
-              <span>Administrator Command Center</span>
-            </h1>
-            <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-400/10 border border-amber-400/20 text-amber-300">
-              Platform Admin
+    <div className="max-w-7xl mx-auto space-y-8">
+      {/* Platform Executive Overview Banner */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-amber-500/10 via-slate-900/60 to-purple-500/10 border border-amber-500/20 backdrop-blur-xl">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2.5">
+            <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold text-xs uppercase tracking-wider">
+              Governance Active
             </span>
+            <span className="text-xs text-slate-400">• Real-Time Marketplace Analytics</span>
           </div>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1.5">
-            Global governance: Marketplace GMV velocity, 5% fee commission tracking, venue quality moderation, and refund authorizations.
+          <h2 className="text-xl sm:text-2xl font-heading font-black text-white">
+            Marketplace Command & Operational Overview
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-400">
+            Oversee GMV velocity, collect 5% platform commission fees, audit partner listings, and authorize disputes.
           </p>
         </div>
 

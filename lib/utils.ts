@@ -89,3 +89,51 @@ export function calculateRefund({
     reason: `Eligible for a ${refundPct}% refund according to the event cancellation policy.`,
   };
 }
+
+/**
+ * Parses a slot date string (YYYY-MM-DD or ISO) and a time string (e.g. "11:30", "16:30", "11:30 AM", "04:30 PM")
+ * into a valid local Date object.
+ */
+export function parseSlotDateTime(dateStr: string, timeStr: string): Date | null {
+  if (!dateStr || !timeStr) return null;
+  try {
+    const cleanDate = dateStr.split("T")[0]; // "YYYY-MM-DD"
+    const parts = cleanDate.split("-").map(Number);
+    if (parts.length < 3 || isNaN(parts[0]) || isNaN(parts[1]) || isNaN(parts[2])) {
+      return null;
+    }
+    const [year, month, day] = parts;
+
+    // Check for AM / PM indicators
+    const isPM = /pm/i.test(timeStr);
+    const isAM = /am/i.test(timeStr);
+
+    // Match "HH:MM" or "H:MM"
+    const match = timeStr.match(/(\d{1,2}):(\d{2})/);
+    if (!match) return null;
+
+    let hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+
+    if (isPM && hours < 12) {
+      hours += 12;
+    } else if (isAM && hours === 12) {
+      hours = 0;
+    }
+
+    return new Date(year, month - 1, day, hours, minutes, 0, 0);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Determines whether a slot has already started relative to current time.
+ * If bufferMinutes is passed, marks slot started bufferMinutes before the start time.
+ */
+export function isSlotStarted(dateStr: string, timeStr: string, bufferMinutes = 0): boolean {
+  const slotDate = parseSlotDateTime(dateStr, timeStr);
+  if (!slotDate) return false;
+  return slotDate.getTime() <= (Date.now() + bufferMinutes * 60 * 1000);
+}
+

@@ -55,6 +55,7 @@ interface CartContextType {
   setIsDrawerOpen: (open: boolean) => void;
   openDrawer: () => void;
   closeDrawer: () => void;
+  mergeGuestCartWithUser: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -303,6 +304,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {}
   };
 
+  const mergeGuestCartWithUser = useCallback(async () => {
+    try {
+      const res = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items, sessionId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.items && Array.isArray(data.items)) {
+          setItems(data.items);
+          try {
+            localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(data.items));
+          } catch (e) {}
+        }
+      }
+    } catch (e) {
+      console.error("Failed to merge cart:", e);
+    }
+  }, [items, sessionId]);
+
   const itemCount = items.length;
   const subtotal = items.reduce((sum, item) => sum + item.itemTotal, 0);
   const platformFee = Math.round((subtotal * 5) / 100);
@@ -330,6 +352,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         setIsDrawerOpen,
         openDrawer: () => setIsDrawerOpen(true),
         closeDrawer: () => setIsDrawerOpen(false),
+        mergeGuestCartWithUser,
       }}
     >
       {children}

@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
       role: user.role,
       avatar: user.avatar,
       companyName: user.companyName,
+      isVerified: user.isVerified ?? false,
     };
 
     const response = NextResponse.json({

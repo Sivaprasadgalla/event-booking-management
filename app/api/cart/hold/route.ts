@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { SlotHold, Booking, Event } from "@/models";
 import { getUserFromRequest } from "@/lib/auth";
+import { isSlotStarted } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -49,10 +50,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. Check if slot is already fully booked in confirmed bookings
+    // 3. Check if slot has already started or passed
     const event = await Event.findById(eventId).lean();
     if (!event) {
       return NextResponse.json({ error: "Event not found" }, { status: 404 });
+    }
+
+    const targetDailySlot = (event.dailyTimeSlots || []).find((s: any) => s.id === slotId);
+    const targetScheduleSlot = (event.scheduleSlots || []).find(
+      (s: any) => s.id === slotId && (!s.date || s.date === date)
+    );
+    const slotStartTime = targetDailySlot?.startTime || targetScheduleSlot?.startTime;
+
+    if (slotStartTime && isSlotStarted(date, slotStartTime)) {
+      return NextResponse.json(
+        {
+          error: `This celebration time slot (${slotStartTime}) has already started and cannot be booked.`,
+          isStarted: true,
+        },
+        { status: 400 }
+      );
     }
 
     // Check specific schedule slot capacity if present

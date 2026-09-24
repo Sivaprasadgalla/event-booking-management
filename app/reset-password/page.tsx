@@ -4,8 +4,19 @@ import React, { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useToast } from "@/context/ToastContext";
-import { KeyRound, Lock, Eye, EyeOff, CheckCircle2, ArrowRight, Loader2, AlertCircle } from "lucide-react";
-import { motion } from "framer-motion";
+import {
+  PartyPopper,
+  KeyRound,
+  Lock,
+  Eye,
+  EyeOff,
+  CheckCircle2,
+  ArrowRight,
+  ArrowLeft,
+  Loader2,
+  AlertCircle,
+  ShieldCheck,
+} from "lucide-react";
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -57,7 +68,7 @@ function ResetPasswordForm() {
         toast.success("Password reset successfully! Redirecting to login...", "Success");
         setTimeout(() => {
           router.push("/login");
-        }, 2500);
+        }, 2000);
       } else {
         toast.error(data.error || "Failed to reset password.", "Reset Error");
       }
@@ -71,7 +82,7 @@ function ResetPasswordForm() {
 
   if (!token || !email) {
     return (
-      <div className="bg-slate-900/80 border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-2xl shadow-2xl space-y-5 text-center">
+      <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-2xl shadow-2xl space-y-5 text-center">
         <div className="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center mx-auto">
           <AlertCircle className="w-7 h-7" />
         </div>
@@ -81,7 +92,7 @@ function ResetPasswordForm() {
         </p>
         <Link
           href="/forgot-password"
-          className="inline-block py-2.5 px-6 rounded-xl bg-amber-400 text-slate-950 font-bold text-sm"
+          className="inline-block py-2.5 px-6 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-sm transition"
         >
           Request New Link
         </Link>
@@ -90,7 +101,7 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="bg-slate-900/80 border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-2xl shadow-2xl space-y-6">
+    <div className="space-y-6">
       <div className="text-center space-y-2">
         <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-500 text-slate-950 flex items-center justify-center mx-auto shadow-lg shadow-amber-400/20">
           <Lock className="w-7 h-7" />
@@ -110,7 +121,7 @@ function ResetPasswordForm() {
               New Password (min 6 characters)
             </label>
             <div className="relative">
-              <KeyRound className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
+              <KeyRound className="w-4 h-4 text-slate-500 absolute left-4 top-3.5 pointer-events-none" />
               <input
                 type={showPassword ? "text" : "password"}
                 required
@@ -118,12 +129,12 @@ function ResetPasswordForm() {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Enter new password"
-                className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white text-sm font-medium focus:border-amber-400 outline-none"
+                className="w-full pl-11 pr-11 py-3 rounded-2xl bg-slate-900 border border-white/10 text-white text-sm outline-none focus:border-amber-400 transition"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="text-slate-500 hover:text-slate-300 absolute right-3.5 top-3"
+                className="text-slate-400 hover:text-slate-200 absolute right-3.5 top-3.5"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -135,14 +146,14 @@ function ResetPasswordForm() {
               Confirm New Password
             </label>
             <div className="relative">
-              <KeyRound className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
+              <KeyRound className="w-4 h-4 text-slate-500 absolute left-4 top-3.5 pointer-events-none" />
               <input
                 type="password"
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Re-type new password"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white text-sm font-medium focus:border-amber-400 outline-none"
+                className="w-full pl-11 pr-4 py-3 rounded-2xl bg-slate-900 border border-white/10 text-white text-sm outline-none focus:border-amber-400 transition"
               />
             </div>
           </div>
@@ -150,11 +161,12 @@ function ResetPasswordForm() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-heading font-extrabold text-sm shadow-xl shadow-amber-400/20 transition flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
+            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-heading font-extrabold text-sm shadow-xl shadow-amber-400/20 transition flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" /> Updating Password...
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Updating Password...</span>
               </>
             ) : (
               <>
@@ -166,16 +178,16 @@ function ResetPasswordForm() {
         </form>
       ) : (
         <div className="text-center space-y-4">
-          <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
-            <CheckCircle2 className="w-6 h-6" />
+          <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
+            <CheckCircle2 className="w-7 h-7" />
           </div>
-          <h3 className="text-lg font-heading font-bold text-white">Password Reset Complete!</h3>
+          <h3 className="text-xl font-heading font-bold text-white">Password Reset Complete!</h3>
           <p className="text-xs text-slate-400">
             Your account credentials have been updated securely. Redirecting to sign in...
           </p>
           <Link
             href="/login"
-            className="block w-full py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-sm transition"
+            className="block w-full py-3.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-sm transition"
           >
             Sign In Now
           </Link>
@@ -187,17 +199,64 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
-        <Suspense
-          fallback={
-            <div className="p-8 text-center text-sm text-slate-400">
-              Loading verification parameters...
+    <div className="min-h-screen flex items-stretch bg-slate-950 text-slate-100">
+      {/* Brand Sidebar */}
+      <div className="hidden lg:flex lg:w-5/12 xl:w-1/2 relative bg-gradient-to-br from-slate-900 via-amber-950/20 to-purple-950/40 p-12 flex-col justify-between border-r border-white/10 overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-600/15 rounded-full blur-[140px] pointer-events-none" />
+
+        <div className="relative z-10">
+          <Link href="/" className="inline-flex items-center gap-3 group">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-purple-600 via-pink-600 to-amber-500 flex items-center justify-center text-white shadow-lg shadow-purple-900/40 group-hover:scale-105 transition">
+              <PartyPopper className="w-6 h-6" />
             </div>
-          }
-        >
-          <ResetPasswordForm />
-        </Suspense>
+            <div className="flex flex-col">
+              <span className="font-heading font-extrabold text-xl text-white tracking-tight">
+                Celebrate<span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Hub</span>
+              </span>
+              <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">
+                Security Recovery
+              </span>
+            </div>
+          </Link>
+        </div>
+
+        <div className="relative z-10 space-y-4 max-w-md">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>End-to-End Account Protection</span>
+          </div>
+          <h2 className="text-3xl font-heading font-black text-white">Create a Strong Passphrase.</h2>
+          <p className="text-sm text-slate-400">
+            Use at least 6 characters with a combination of numbers and symbols for ultimate celebration account security.
+          </p>
+        </div>
+
+        <div className="relative z-10 text-xs text-slate-500 border-t border-white/5 pt-6">
+          CelebrateHub Marketplace &copy; 2026. Secure Credentials Manager.
+        </div>
+      </div>
+
+      {/* Main Interactive Form Panel */}
+      <div className="flex-1 flex flex-col justify-between p-6 sm:p-10 lg:p-16 relative overflow-y-auto">
+        <div className="flex items-center justify-between">
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-400 hover:text-white transition px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Sign In</span>
+          </Link>
+        </div>
+
+        <div className="max-w-md w-full mx-auto my-auto py-8">
+          <Suspense fallback={<div className="text-center text-sm text-slate-400">Loading form...</div>}>
+            <ResetPasswordForm />
+          </Suspense>
+        </div>
+
+        <div className="text-center text-xs text-slate-500 pt-6">
+          CelebrateHub Marketplace &copy; 2026.
+        </div>
       </div>
     </div>
   );
