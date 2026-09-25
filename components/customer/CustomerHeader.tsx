@@ -17,6 +17,7 @@ import {
   Clock,
   ExternalLink,
 } from "lucide-react";
+import ThemeToggle from "@/components/common/ThemeToggle";
 
 export default function CustomerHeader() {
   const pathname = usePathname();
@@ -38,7 +39,7 @@ export default function CustomerHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-20 bg-[#080914]/85 backdrop-blur-xl border-b border-pink-500/10 px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-20 bg-slate-950/85 backdrop-blur-xl border-b border-pink-500/10 px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4">
       {/* Page Title & Breadcrumb */}
       <div>
         <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">
@@ -53,6 +54,9 @@ export default function CustomerHeader() {
 
       {/* Right Controls */}
       <div className="flex items-center gap-3">
+        {/* Theme Switcher */}
+        <ThemeToggle />
+
         {/* Slot Hold Timer if cart active */}
         {remainingSeconds > 0 && items.length > 0 && (
           <Link

@@ -78,6 +78,7 @@ export default function CheckoutPage() {
   const [otpResending, setOtpResending] = useState(false);
   const [otpResendCooldown, setOtpResendCooldown] = useState(0);
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const paymentSuccessfulRef = useRef(false);
 
   // Open modal automatically if user is not logged in
   useEffect(() => {
@@ -101,10 +102,10 @@ export default function CheckoutPage() {
   }, [user, mergeGuestCartWithUser]);
 
   useEffect(() => {
-    if (items.length === 0) {
+    if (items.length === 0 && !paymentSuccessfulRef.current && !processing) {
       router.push("/cart");
     }
-  }, [items, router]);
+  }, [items, router, processing]);
 
   // Resend cooldown timer
   useEffect(() => {
@@ -346,9 +347,10 @@ export default function CheckoutPage() {
           throw new Error(verifyData.error || "Payment verification failed");
         }
 
+        paymentSuccessfulRef.current = true;
         toast.success("Reservation confirmed! Your celebration is locked in.", "Celebration Booked");
-        router.push(`/booking-confirmation/${orderId}`);
         clearCart();
+        window.location.href = `/booking-confirmation/${orderId}`;
         return;
       }
 
@@ -388,9 +390,10 @@ export default function CheckoutPage() {
               throw new Error(verifyData.error || "Payment verification failed");
             }
 
+            paymentSuccessfulRef.current = true;
             toast.success("Payment successful! Your passes have been generated.", "Reservation Confirmed");
-            router.push(`/booking-confirmation/${orderId}`);
             clearCart();
+            window.location.href = `/booking-confirmation/${orderId}`;
           } catch (err: any) {
             console.error("Verification error:", err);
             toast.error(err.message || "Failed to confirm payment. Please contact host support.", "Verification Error");

@@ -15,6 +15,7 @@ import {
   ChevronDown,
   User,
 } from "lucide-react";
+import ThemeToggle from "@/components/common/ThemeToggle";
 
 export default function AdminHeader() {
   const pathname = usePathname();
@@ -46,6 +47,9 @@ export default function AdminHeader() {
 
       {/* Right Controls */}
       <div className="flex items-center gap-3">
+        {/* Theme Switcher */}
+        <ThemeToggle />
+
         {/* Quick links to pending items */}
         <Link
           href="/admin/events"

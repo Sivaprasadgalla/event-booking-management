@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Outfit } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 import { ToastProvider } from "@/context/ToastContext";
@@ -33,20 +34,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${plusJakartaSans.variable} ${outfit.variable}`}>
-      <body className="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased font-sans selection:bg-purple-500 selection:text-white">
-        <AuthProvider>
-          <ToastProvider>
-            <CartProvider>
-              <CmsProvider>
-                <Navbar />
-                <main className="flex-1">{children}</main>
-                <CartDrawer />
-                <Footer />
-              </CmsProvider>
-            </CartProvider>
-          </ToastProvider>
-        </AuthProvider>
+    <html lang="en" suppressHydrationWarning className={`${plusJakartaSans.variable} ${outfit.variable}`}>
+      <body suppressHydrationWarning className="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased font-sans selection:bg-purple-500 selection:text-white">
+        <ThemeProvider>
+          <AuthProvider>
+            <ToastProvider>
+              <CartProvider>
+                <CmsProvider>
+                  <Navbar />
+                  <main className="flex-1">{children}</main>
+                  <CartDrawer />
+                  <Footer />
+                </CmsProvider>
+              </CartProvider>
+            </ToastProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

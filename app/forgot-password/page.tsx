@@ -13,6 +13,7 @@ import {
   ArrowRight,
   Loader2,
   ShieldCheck,
+  Clock,
 } from "lucide-react";
 
 export default function ForgotPasswordPage() {
@@ -175,38 +176,49 @@ export default function ForgotPasswordPage() {
               </button>
             </form>
           ) : (
-            <div className="space-y-4">
-              <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs space-y-2">
-                <div className="flex items-center gap-2 font-bold text-emerald-400">
-                  <CheckCircle2 className="w-4 h-4" /> Reset Link Ready (Valid for 1 hour)
-                </div>
-                <p className="text-slate-300 leading-relaxed">
-                  A cryptographic reset token has been issued for <strong>{email}</strong>.
+            <div className="space-y-5 text-center">
+              <div className="w-16 h-16 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto shadow-lg shadow-emerald-950/40">
+                <Mail className="w-8 h-8 text-emerald-400" />
+              </div>
+
+              <div className="space-y-2">
+                <h2 className="text-xl font-heading font-bold text-white">
+                  Check Your Email Inbox
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-sm mx-auto">
+                  We have dispatched a secure password reset link to{" "}
+                  <strong className="text-white font-mono">{email}</strong>.
                 </p>
               </div>
 
-              {resetUrl && (
-                <div className="space-y-2 pt-2">
-                  <p className="text-xs text-slate-400 text-center">Click below to proceed to password reset:</p>
-                  <Link
-                    href={resetUrl}
-                    className="block w-full py-3.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-heading font-bold text-sm shadow-lg shadow-amber-500/20 text-center transition"
-                  >
-                    Reset Password Now
-                  </Link>
+              <div className="p-4 rounded-2xl bg-slate-900 border border-white/10 text-left text-xs space-y-2">
+                <div className="flex items-center gap-2 font-bold text-amber-400">
+                  <Clock className="w-4 h-4" /> Link Expires in 60 Minutes
                 </div>
-              )}
+                <p className="text-slate-400 leading-relaxed">
+                  Click the link inside the email to choose a new password. If you don't see it in your primary inbox, please check your spam or promotional folders.
+                </p>
+              </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setSubmittedSuccess(false);
-                  setResetUrl(null);
-                }}
-                className="text-xs text-slate-400 hover:text-white underline block mx-auto pt-2"
-              >
-                Try a different email address
-              </button>
+              <div className="space-y-2 pt-2">
+                <Link
+                  href="/login"
+                  className="block w-full py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:from-purple-500 hover:to-amber-400 text-white font-heading font-bold text-sm shadow-xl shadow-purple-900/30 transition text-center"
+                >
+                  Return to Sign In
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSubmittedSuccess(false);
+                    setResetUrl(null);
+                  }}
+                  className="text-xs text-slate-400 hover:text-white underline block mx-auto pt-2 transition"
+                >
+                  Try a different email address or resend
+                </button>
+              </div>
             </div>
           )}
         </div>

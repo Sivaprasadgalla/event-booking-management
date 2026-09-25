@@ -86,6 +86,12 @@ export default async function HomePage() {
     console.warn("Database connection pending");
   }
 
+  // Convert Mongoose BSON documents (which contain ObjectIds with toJSON/buffer methods and Date objects)
+  // to plain serializable JavaScript objects before passing to Client Components (like EventCard)
+  featuredEvents = JSON.parse(JSON.stringify(featuredEvents));
+  trendingEvents = JSON.parse(JSON.stringify(trendingEvents));
+  cmsData = JSON.parse(JSON.stringify(cmsData));
+
   const hero = cmsData.hero || DEFAULT_CMS_DATA.hero;
   const occasionsList = cmsData.occasions && cmsData.occasions.length > 0 ? cmsData.occasions : OCCASIONS;
 
@@ -284,7 +290,7 @@ export default async function HomePage() {
             <h2 className="text-2xl sm:text-4xl font-heading font-black leading-snug">
               Host Celebrations & Maximize Your Space
             </h2>
-            <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
+            <p className="text-sm sm:text-base leading-relaxed">
               List your banquet hall, rooftop, or private farmhouse. Define your weekday/weekend availability,
               set multiple daily shifts, offer customized celebration packages, and receive direct payouts.
             </p>

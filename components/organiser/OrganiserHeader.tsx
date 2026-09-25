@@ -14,6 +14,7 @@ import {
   Building2,
   Calendar,
 } from "lucide-react";
+import ThemeToggle from "@/components/common/ThemeToggle";
 
 export default function OrganiserHeader() {
   const pathname = usePathname();
@@ -43,6 +44,9 @@ export default function OrganiserHeader() {
 
       {/* Right Controls */}
       <div className="flex items-center gap-2.5 sm:gap-3">
+        {/* Theme Switcher */}
+        <ThemeToggle />
+
         {/* Quick Check-in link */}
         <Link
           href="/organiser/bookings"

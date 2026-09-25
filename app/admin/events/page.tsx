@@ -18,6 +18,7 @@ import {
   Filter,
   AlertCircle,
   MessageSquare,
+  Plus,
 } from "lucide-react";
 
 export default function AdminEventsModerationPage() {
@@ -136,14 +137,24 @@ export default function AdminEventsModerationPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl sm:text-4xl font-heading font-extrabold text-white flex items-center gap-3">
-          <Sparkles className="w-8 h-8 text-amber-400" />
-          <span>Venue Moderation & Curation</span>
-        </h1>
-        <p className="text-sm sm:text-base text-slate-400 mt-1">
-          Inspect host submissions, review venue photos, approve for public listing, or reject with constructive notes.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-heading font-extrabold text-white flex items-center gap-3">
+            <Sparkles className="w-8 h-8 text-amber-400" />
+            <span>Venue Moderation & Curation</span>
+          </h1>
+          <p className="text-sm sm:text-base text-slate-400 mt-1">
+            Inspect host submissions, review venue photos, approve for public listing, or create and assign events to hosts.
+          </p>
+        </div>
+
+        <Link
+          href="/admin/events/new"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-heading font-bold text-sm shadow-xl shadow-amber-500/20 transition self-start sm:self-auto shrink-0"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Create & Assign Venue</span>
+        </Link>
       </div>
 
       {/* Filter Tabs */}

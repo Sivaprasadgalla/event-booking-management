@@ -74,3 +74,456 @@ h1, h2, h3, h4, h5, h6 {
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
+
+/* ==============================================================================
+   LIGHT THEME ADAPTATION - LUXURY EDITORIAL SPECIFICATION
+   ============================================================================== */
+html.light {
+  --background: 210 40% 98%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+}
+
+/* 1. Base Canvas & Scrollbar */
+html.light body {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+html.light ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+html.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: #9333ea;
+}
+
+/* 2. Main Page Background Wrappers */
+html.light .bg-slate-950 {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* 3. Surface Cards & Containers */
+html.light .bg-slate-900,
+html.light .bg-slate-900\/95,
+html.light .bg-slate-900\/90,
+html.light .bg-slate-900\/80,
+html.light .bg-slate-900\/70,
+html.light .bg-slate-900\/60 {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.02) !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light .bg-slate-900\/40 {
+  background-color: rgba(255, 255, 255, 0.75) !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Sub-panels, wells, and inner containers */
+html.light .bg-slate-800,
+html.light .bg-slate-850,
+html.light .bg-slate-800\/80,
+html.light .bg-slate-800\/60,
+html.light .bg-slate-800\/50,
+html.light .bg-slate-950\/60,
+html.light .bg-slate-950\/70 {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light .bg-white\/5 {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light .bg-white\/10 {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light .bg-white\/15,
+html.light .bg-white\/20 {
+  background-color: #e2e8f0 !important;
+}
+
+/* 4. Glass Panels & Blurs */
+html.light .glass-panel {
+  background: rgba(255, 255, 255, 0.88) !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05) !important;
+}
+
+/* 5. Headers & Navbars */
+html.light header {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border-bottom-color: #e2e8f0 !important;
+  box-shadow: 0 1px 4px 0 rgba(15, 23, 42, 0.04) !important;
+}
+
+html.light header a:not([class*="bg-"]):not([class*="rounded-2xl"]):not([class*="rounded-xl"]),
+html.light header span.text-slate-300,
+html.light header span.text-slate-400 {
+  color: #334155 !important;
+}
+
+html.light header a:hover {
+  color: #7e22ce !important;
+}
+
+/* 6. Sidebars (Admin, Organiser, Customer) */
+html.light aside,
+html.light div[class*="bg-slate-950/95"] {
+  background-color: #ffffff !important;
+  border-right-color: #e2e8f0 !important;
+  box-shadow: 2px 0 16px rgba(15, 23, 42, 0.03) !important;
+}
+
+html.light aside nav a.text-slate-400,
+html.light aside nav a:not([class*="from-"]):not([class*="bg-gradient"]) {
+  color: #475569 !important;
+}
+
+html.light aside nav a:not([class*="from-"]):not([class*="bg-gradient"]):hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+/* Active sidebar nav items */
+html.light aside nav a[class*="from-amber"] {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border-color: #fde68a !important;
+}
+
+html.light aside nav a[class*="from-purple"] {
+  background: #f3e8ff !important;
+  color: #6b21a8 !important;
+  border-color: #e9d5ff !important;
+}
+
+html.light aside nav a[class*="via-pink"] {
+  background: #fdf2f8 !important;
+  color: #9d174d !important;
+  border-color: #fbcfe8 !important;
+}
+
+/* 7. Typography: Surface Headings & Text */
+html.light h1:not([class*="bg-clip-text"]):not(button *),
+html.light h2:not([class*="bg-clip-text"]):not(button *),
+html.light h3:not([class*="bg-clip-text"]):not(button *),
+html.light h4:not([class*="bg-clip-text"]):not(button *),
+html.light h5:not([class*="bg-clip-text"]):not(button *),
+html.light h6:not([class*="bg-clip-text"]):not(button *) {
+  color: #0f172a !important;
+}
+
+/* Slate text levels */
+html.light .text-slate-100 { color: #0f172a !important; }
+html.light .text-slate-200 { color: #1e293b !important; }
+html.light .text-slate-300 { color: #334155 !important; }
+html.light .text-slate-400 { color: #475569 !important; }
+html.light .text-slate-500 { color: #64748b !important; }
+html.light .text-slate-600 { color: #94a3b8 !important; }
+
+/* Surface text-white (paragraphs, card headers, labels) - EXCLUDE buttons, gradients, pills */
+html.light p.text-white,
+html.light div.text-white:not([class*="bg-"]):not(button *):not(a[class*="bg-"] *):not([class*="avatar"]),
+html.light span.text-white:not([class*="bg-"]):not(button *):not(a[class*="bg-"] *):not(.badge *):not([class*="badge"]) {
+  color: #0f172a !important;
+}
+
+/* 8. CRITICAL: Pure White text on Buttons, Gradients, and Solid Badges */
+html.light button.text-white,
+html.light a[class*="bg-"].text-white,
+html.light a[class*="bg-"] .text-white,
+html.light [class*="bg-gradient-"] .text-white,
+html.light [class*="bg-gradient-"] span.text-white,
+html.light [class*="bg-gradient-"] span:not([class*="bg-clip-text"]),
+html.light [class*="bg-purple-600"] .text-white,
+html.light [class*="bg-pink-600"] .text-white,
+html.light [class*="bg-pink-600"] span,
+html.light [class*="bg-emerald-600"] .text-white,
+html.light [class*="bg-rose-600"] .text-white,
+html.light [class*="bg-rose-600"] span,
+html.light button[class*="bg-gradient-to"],
+html.light button[class*="bg-pink-"],
+html.light a[class*="bg-gradient-to"],
+html.light a[class*="bg-pink-"] {
+  color: #ffffff !important;
+}
+
+/* Icons inside buttons must remain pure white */
+html.light button[class*="bg-gradient-"] svg,
+html.light a[class*="bg-gradient-"] svg,
+html.light button[class*="bg-pink-"] svg,
+html.light a[class*="bg-pink-"] svg {
+  color: #ffffff !important;
+}
+
+/* Preserve floating image badges on dark overlay */
+html.light .aspect-\[16\/10\] span.bg-slate-950\/80,
+html.light .aspect-\[16\/10\] div.bg-slate-950\/80,
+html.light .relative span.bg-slate-950\/80 {
+  background-color: rgba(15, 23, 42, 0.85) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+html.light .aspect-\[16\/10\] span.bg-slate-950\/80 svg,
+html.light .relative span.bg-slate-950\/80 svg {
+  color: inherit !important;
+}
+
+/* 9. Accent Colors: Deep Vibrant AAA Contrast on Light Surfaces */
+html.light .text-purple-300,
+html.light .text-purple-400 {
+  color: #7e22ce !important;
+}
+
+html.light .text-pink-300,
+html.light .text-pink-400 {
+  color: #be185d !important;
+}
+
+html.light .text-amber-300,
+html.light .text-amber-400 {
+  color: #b45309 !important;
+}
+
+html.light .text-emerald-300,
+html.light .text-emerald-400 {
+  color: #047857 !important;
+}
+
+html.light .text-rose-300,
+html.light .text-rose-400 {
+  color: #be123c !important;
+}
+
+html.light .text-indigo-300,
+html.light .text-indigo-400 {
+  color: #4338ca !important;
+}
+
+html.light .text-teal-300,
+html.light .text-teal-400 {
+  color: #0f766e !important;
+}
+
+html.light .text-blue-300,
+html.light .text-blue-400 {
+  color: #1d4ed8 !important;
+}
+
+/* Soft Tinted Badges in Light Mode */
+html.light .bg-purple-500\/10,
+html.light .bg-purple-500\/15,
+html.light .bg-purple-500\/20 {
+  background-color: #f3e8ff !important;
+  border-color: #d8b4fe !important;
+  color: #7e22ce !important;
+}
+
+html.light .bg-pink-500\/10,
+html.light .bg-pink-500\/15,
+html.light .bg-pink-500\/20 {
+  background-color: #fce7f3 !important;
+  border-color: #fbcfe8 !important;
+  color: #be185d !important;
+}
+
+html.light .bg-amber-500\/10,
+html.light .bg-amber-500\/15,
+html.light .bg-amber-500\/20,
+html.light .bg-amber-400\/10,
+html.light .bg-amber-400\/20 {
+  background-color: #fef3c7 !important;
+  border-color: #fde68a !important;
+  color: #b45309 !important;
+}
+
+html.light .bg-emerald-500\/10,
+html.light .bg-emerald-500\/15,
+html.light .bg-emerald-500\/20 {
+  background-color: #d1fae5 !important;
+  border-color: #a7f3d0 !important;
+  color: #047857 !important;
+}
+
+html.light .bg-rose-500\/10,
+html.light .bg-rose-500\/15,
+html.light .bg-rose-500\/20 {
+  background-color: #ffe4e6 !important;
+  border-color: #fecdd3 !important;
+  color: #be123c !important;
+}
+
+html.light .bg-indigo-500\/10,
+html.light .bg-indigo-500\/15,
+html.light .bg-indigo-500\/20 {
+  background-color: #e0e7ff !important;
+  border-color: #c7d2fe !important;
+  color: #4338ca !important;
+}
+
+html.light .bg-teal-500\/10,
+html.light .bg-teal-500\/20 {
+  background-color: #ccfbf1 !important;
+  border-color: #99f6e4 !important;
+  color: #0f766e !important;
+}
+
+html.light .bg-blue-500\/10,
+html.light .bg-blue-500\/20 {
+  background-color: #dbeafe !important;
+  border-color: #bfdbfe !important;
+  color: #1d4ed8 !important;
+}
+
+/* 10. Gradient Heading & Price Text Adaptation */
+html.light .bg-clip-text {
+  background-image: linear-gradient(135deg, #6b21a8 0%, #db2777 50%, #d97706 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+}
+
+/* 11. Borders & Dividers */
+html.light .border-white\/5,
+html.light .border-white\/10 {
+  border-color: #e2e8f0 !important;
+}
+
+html.light .border-white\/15,
+html.light .border-white\/20,
+html.light .border-white\/30 {
+  border-color: #cbd5e1 !important;
+}
+
+html.light .border-slate-800,
+html.light .border-slate-700 {
+  border-color: #e2e8f0 !important;
+}
+
+html.light .divide-white\/5 > :not([hidden]) ~ :not([hidden]),
+html.light .divide-white\/10 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #f1f5f9 !important;
+}
+
+/* 12. Form Controls (Input, Textarea, Select, Option) */
+html.light input:not([type="checkbox"]):not([type="radio"]),
+html.light textarea,
+html.light select {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light input:focus,
+html.light textarea:focus,
+html.light select:focus {
+  border-color: #9333ea !important;
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.15) !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+html.light option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* 13. Tables */
+html.light table thead tr {
+  background-color: #f8fafc !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+html.light table th {
+  color: #475569 !important;
+}
+
+html.light table td {
+  color: #1e293b !important;
+  border-bottom-color: #f1f5f9 !important;
+}
+
+html.light table tbody tr:hover {
+  background-color: #f8fafc !important;
+}
+
+/* 14. Modals, Dialogs & Dropdowns */
+html.light .fixed.inset-0.bg-slate-950\/80,
+html.light .fixed.inset-0.bg-black\/75,
+html.light .fixed.inset-0.bg-black\/80 {
+  background-color: rgba(15, 23, 42, 0.55) !important;
+}
+
+html.light .relative.bg-slate-900,
+html.light div[class*="z-50"].bg-slate-900 {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.15), 0 0 0 1px rgba(15, 23, 42, 0.05) !important;
+}
+
+/* Cart drawer */
+html.light div[class*="w-screen"][class*="bg-slate-950"] {
+  background-color: #ffffff !important;
+  border-left-color: #e2e8f0 !important;
+}
+
+/* 15. Toast Portal in Light Mode */
+html.light #celebratehub-toast-portal .bg-slate-900\/95,
+html.light #celebratehub-toast-portal .bg-slate-900 {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.18), 0 10px 20px -5px rgba(15, 23, 42, 0.08) !important;
+  border-color: #e2e8f0 !important;
+  border-width: 1px !important;
+}
+
+html.light #celebratehub-toast-portal .text-slate-100,
+html.light #celebratehub-toast-portal .font-heading {
+  color: #0f172a !important;
+}
+
+html.light #celebratehub-toast-portal .text-slate-400 {
+  color: #475569 !important;
+}
+
+/* 16. Footer */
+html.light footer {
+  background-color: #ffffff !important;
+  border-top-color: #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+html.light footer h4 {
+  color: #0f172a !important;
+}
+
+html.light footer a {
+  color: #64748b !important;
+}
+
+html.light footer a:hover {
+  color: #7e22ce !important;
+}
+
+

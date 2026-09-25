@@ -113,7 +113,9 @@ function ToastContainer({
   return createPortal(
     <div
       aria-live="assertive"
-      className="fixed top-20 sm:top-24 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-[9999999] flex flex-col gap-2.5 pointer-events-none"
+      id="celebratehub-toast-portal"
+      className="fixed top-5 right-4 sm:right-6 left-4 sm:left-auto sm:w-[420px] max-w-full flex flex-col gap-3 pointer-events-none"
+      style={{ zIndex: 99999999 }}
     >
       <AnimatePresence mode="popLayout">
         {toasts.map((t) => (
@@ -125,13 +127,13 @@ function ToastContainer({
   );
 }
 
-function ToastCard({
-  toast,
-  onDismiss,
-}: {
-  toast: ToastItem;
-  onDismiss: () => void;
-}) {
+const ToastCard = React.forwardRef<
+  HTMLDivElement,
+  {
+    toast: ToastItem;
+    onDismiss: () => void;
+  }
+>(({ toast, onDismiss }, ref) => {
   const isSuccess = toast.type === "success";
   const isError = toast.type === "error";
   const isWarning = toast.type === "warning";
@@ -155,6 +157,7 @@ function ToastCard({
 
   return (
     <motion.div
+      ref={ref}
       layout
       initial={{ opacity: 0, y: -16, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -220,4 +223,6 @@ function ToastCard({
       )}
     </motion.div>
   );
-}
+});
+
+ToastCard.displayName = "ToastCard";

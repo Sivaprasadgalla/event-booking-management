@@ -183,3 +183,138 @@ export async function sendVerificationEmail({
   return { sent: true, mode: "simulation" };
 }
 
+interface SendPasswordResetEmailParams {
+  toEmail: string;
+  name?: string;
+  resetUrl: string;
+}
+
+export async function sendPasswordResetEmail({
+  toEmail,
+  name,
+  resetUrl,
+}: SendPasswordResetEmailParams): Promise<{ sent: boolean; mode: "smtp" | "simulation"; error?: string }> {
+  const host = process.env.SMTP_HOST || "smtp.gmail.com";
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  const port = 465;
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Reset Your CelebrateHub Password</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #030712; color: #f3f4f6; margin: 0; padding: 40px 20px; }
+          .container { max-width: 540px; margin: 0 auto; background: #0f172a; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); padding: 40px 32px; text-align: center; }
+          .logo { font-size: 24px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; margin-bottom: 24px; }
+          .logo span { background: linear-gradient(135deg, #a855f7, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+          h1 { font-size: 22px; font-weight: 700; color: #ffffff; margin-bottom: 12px; }
+          p { font-size: 14px; line-height: 1.6; color: #94a3b8; margin-bottom: 24px; }
+          .btn { display: inline-block; background: linear-gradient(135deg, #f59e0b, #ec4899); color: #030712; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 800; font-size: 14px; margin: 20px 0; }
+          .notice-box { background: #1e293b; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); padding: 16px; margin: 20px 0; text-align: left; }
+          .footer { font-size: 12px; color: #64748b; margin-top: 32px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 20px; }
+          .fallback-link { word-break: break-all; color: #a855f7; font-size: 12px; text-decoration: underline; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="logo">Celebrate<span>Hub</span></div>
+          <h1>Password Reset Request</h1>
+          <p>Hi ${name || "there"}, we received a request to reset your CelebrateHub account password. Click the button below to choose a new password:</p>
+          <a href="${resetUrl}" class="btn">Reset My Password</a>
+          <div class="notice-box">
+            <div style="font-size: 12px; color: #f59e0b; font-weight: 700; margin-bottom: 4px;">⏰ Valid for 60 Minutes</div>
+            <div style="font-size: 12px; color: #94a3b8; line-height: 1.5;">This single-use cryptographic security token will automatically expire in 1 hour.</div>
+          </div>
+          <p style="font-size: 12px; color: #94a3b8; margin-top: 16px;">If the button doesn't work, copy and paste this direct link into your browser:</p>
+          <a href="${resetUrl}" class="fallback-link">${resetUrl}</a>
+          <div class="footer">
+            <p>If you didn't request a password reset, you can safely disregard this email. Your account remains secure.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const logId = Math.random().toString(36).substring(2, 9);
+  const now = new Date().toISOString();
+
+  // If SMTP is configured, attempt real email transmission
+  if (host && user && pass) {
+    try {
+      console.log(`[PASSWORD RESET EMAIL] Dispatching real email via ${host}:${port} to ${toEmail}...`);
+      const transporter = nodemailer.createTransport({
+        host,
+        port,
+        secure: port === 465,
+        auth: { user, pass },
+        tls: { rejectUnauthorized: false },
+      });
+
+      await transporter.sendMail({
+        from: `"CelebrateHub Security" <${user}>`,
+        to: toEmail,
+        subject: `Reset Your CelebrateHub Password`,
+        html: htmlContent,
+      });
+
+      console.log(`\n=======================================================`);
+      console.log(`✅ [PASSWORD RESET EMAIL SENT SUCCESSFULLY VIA SMTP]`);
+      console.log(`🎯 Recipient: ${toEmail}`);
+      console.log(`🔗 Reset Link: ${resetUrl}`);
+      console.log(`📮 Sent from: ${user} via ${host}`);
+      console.log(`=======================================================\n`);
+
+      emailLogs.push({
+        id: logId,
+        timestamp: now,
+        toEmail,
+        name,
+        subject: `Reset Your CelebrateHub Password`,
+        verifyUrl: resetUrl,
+        mode: "smtp",
+        status: "sent",
+      });
+
+      return { sent: true, mode: "smtp" };
+    } catch (err: any) {
+      console.error(`\n❌ [SMTP PASSWORD RESET FAILURE] Error sending to ${toEmail}:`, err.message);
+      emailLogs.push({
+        id: logId,
+        timestamp: now,
+        toEmail,
+        name,
+        subject: `Reset Your CelebrateHub Password`,
+        verifyUrl: resetUrl,
+        mode: "smtp",
+        status: "failed",
+        error: err.message,
+      });
+    }
+  }
+
+  // Simulation mode fallback
+  console.log(`\n=======================================================`);
+  console.log(`📧 [PASSWORD RESET DISPATCHED - SIMULATION MODE]`);
+  console.log(`📅 Timestamp: ${now}`);
+  console.log(`🎯 Recipient (To): ${toEmail}`);
+  console.log(`🔗 RESET LINK: ${resetUrl}`);
+  console.log(`=======================================================\n`);
+
+  emailLogs.push({
+    id: logId,
+    timestamp: now,
+    toEmail,
+    name,
+    subject: `Reset Your CelebrateHub Password`,
+    verifyUrl: resetUrl,
+    mode: "simulation",
+    status: "simulated",
+  });
+
+  return { sent: true, mode: "simulation" };
+}
+
+

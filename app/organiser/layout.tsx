@@ -19,7 +19,7 @@ export default function OrganiserLayout({ children }: { children: React.ReactNod
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#070913] flex items-center justify-center text-slate-400">
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-500/30 text-purple-400 flex items-center justify-center animate-pulse">
             <PartyPopper className="w-6 h-6" />
@@ -37,7 +37,7 @@ export default function OrganiserLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="min-h-screen bg-[#070913] text-slate-100 flex flex-col lg:flex-row antialiased">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col lg:flex-row antialiased">
       <OrganiserSidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         <OrganiserHeader />

@@ -18,6 +18,7 @@ import {
   X,
   Sparkles,
   Server,
+  PlusCircle,
 } from "lucide-react";
 
 export default function AdminSidebar() {
@@ -37,6 +38,12 @@ export default function AdminSidebar() {
       href: "/admin/events",
       icon: Building2,
       badge: "Pending",
+    },
+    {
+      title: "Create & Assign Venue",
+      href: "/admin/events/new",
+      icon: PlusCircle,
+      badge: "Studio",
     },
     {
       title: "CMS Content Studio",

@@ -5,7 +5,26 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { formatEventDate } from "@/lib/utils";
-import { Users, Search, CheckCircle, XCircle, Shield, AlertTriangle, Trash2, X, AlertCircle } from "lucide-react";
+import {
+  Users,
+  Search,
+  CheckCircle,
+  XCircle,
+  Shield,
+  AlertTriangle,
+  Trash2,
+  X,
+  AlertCircle,
+  UserPlus,
+  Lock,
+  Mail,
+  Building2,
+  Phone,
+  Eye,
+  EyeOff,
+  User,
+  Sparkles,
+} from "lucide-react";
 
 export default function AdminUsersPage() {
   const { user, isLoading } = useAuth();
@@ -20,6 +39,20 @@ export default function AdminUsersPage() {
   const [deleteTargetUser, setDeleteTargetUser] = useState<any | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [activeBookingsWarning, setActiveBookingsWarning] = useState<number | null>(null);
+
+  // Create User Modal State
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [creatingUser, setCreatingUser] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [newUserData, setNewUserData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "customer" as "customer" | "organiser" | "admin",
+    phone: "",
+    companyName: "",
+    isVerified: true,
+  });
 
   const fetchUsers = () => {
     setLoading(true);
@@ -43,6 +76,48 @@ export default function AdminUsersPage() {
       fetchUsers();
     }
   }, [user, isLoading, roleFilter, search]);
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newUserData.name.trim() || !newUserData.email.trim() || !newUserData.password) {
+      toast.error("Name, email, and password are required.");
+      return;
+    }
+
+    try {
+      setCreatingUser(true);
+      const res = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newUserData),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(
+          data.message || `Account for ${newUserData.name} created successfully!`,
+          "User Created"
+        );
+        setCreateModalOpen(false);
+        setNewUserData({
+          name: "",
+          email: "",
+          password: "",
+          role: "customer",
+          phone: "",
+          companyName: "",
+          isVerified: true,
+        });
+        fetchUsers();
+      } else {
+        toast.error(data.error || "Failed to create user account", "Creation Failed");
+      }
+    } catch {
+      toast.error("An unexpected error occurred while creating user.");
+    } finally {
+      setCreatingUser(false);
+    }
+  };
 
   const handleToggleStatus = async (userId: string, currentStatus: string) => {
     const newStatus = currentStatus === "active" ? "suspended" : "active";
@@ -142,14 +217,26 @@ export default function AdminUsersPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
-      <div>
-        <h1 className="text-3xl sm:text-4xl font-heading font-extrabold text-white flex items-center gap-3">
-          <Users className="w-8 h-8 text-amber-400" />
-          <span>User Directory & Governance</span>
-        </h1>
-        <p className="text-sm sm:text-base text-slate-400 mt-1">
-          Manage Customer and Host Partner profiles, verification statuses, and system credentials.
-        </p>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-heading font-extrabold text-white flex items-center gap-3">
+            <Users className="w-8 h-8 text-amber-400" />
+            <span>User Directory & Governance</span>
+          </h1>
+          <p className="text-sm sm:text-base text-slate-400 mt-1">
+            Manage Customer, Host Partner, and Admin profiles, permissions, and security credentials.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setCreateModalOpen(true)}
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-heading font-bold text-sm shadow-xl shadow-amber-500/20 transition self-start sm:self-auto shrink-0"
+        >
+          <UserPlus className="w-4 h-4" />
+          <span>Create New User</span>
+        </button>
       </div>
 
       {/* Toolbar */}
@@ -199,104 +286,315 @@ export default function AdminUsersPage() {
                   <th className="py-4 px-5 text-right font-semibold">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5 font-medium">
-                {users.map((u) => (
-                  <tr key={u._id} className="hover:bg-white/5 transition">
-                    <td className="py-4 px-5 flex items-center gap-3.5">
-                      <div className="w-10 h-10 rounded-full bg-white/10 border border-white/10 flex items-center justify-center font-bold text-sm text-amber-300 shrink-0">
-                        {u.name?.charAt(0)}
-                      </div>
-                      <div>
-                        <span className="font-bold text-white block">{u.name}</span>
-                        <span className="text-xs text-slate-400">{u.email}</span>
-                        {u.companyName && (
-                          <span className="text-xs text-amber-400 block mt-0.5">
-                            {u.companyName}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-
-                    <td className="py-4 px-5">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                          u.role === "admin"
-                            ? "bg-rose-500/10 text-rose-300 border border-rose-500/20"
-                            : u.role === "organiser"
-                            ? "bg-amber-400/10 text-amber-300 border border-amber-400/20"
-                            : "bg-white/10 text-slate-300 border border-white/10"
-                        }`}
-                      >
-                        {u.role}
-                      </span>
-                    </td>
-
-                    <td className="py-4 px-5">
-                      <button
-                        onClick={() => handleToggleVerification(u._id, u.isVerified)}
-                        className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 transition ${
-                          u.isVerified
-                            ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
-                            : "bg-white/5 text-slate-400 hover:bg-white/10 border border-white/10"
-                        }`}
-                      >
-                        <CheckCircle className="w-3.5 h-3.5" />
-                        {u.isVerified ? "Verified" : "Unverified"}
-                      </button>
-                    </td>
-
-                    <td className="py-4 px-5">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-bold ${
-                          u.status === "active"
-                            ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
-                            : "bg-rose-500/10 text-rose-300 border border-rose-500/20"
-                        }`}
-                      >
-                        {u.status}
-                      </span>
-                    </td>
-
-                    <td className="py-4 px-5 text-slate-400 text-xs">
-                      {formatEventDate(u.createdAt, "dd MMM yyyy")}
-                    </td>
-
-                    <td className="py-4 px-5 text-right">
-                      {u.email !== "admin@celebratehub.com" && u.email !== "admin@eventhub.com" && (
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => handleToggleStatus(u._id, u.status)}
-                            disabled={updatingId === u._id}
-                            className={`px-3.5 py-1.5 rounded-xl text-xs font-heading font-bold transition ${
-                              u.status === "active"
-                                ? "text-rose-400 hover:bg-rose-500/10 border border-rose-500/30"
-                                : "text-emerald-300 hover:bg-emerald-500/10 border border-emerald-500/30"
-                            }`}
-                          >
-                            {u.status === "active" ? "Suspend" : "Activate"}
-                          </button>
-                          <button
-                            onClick={() => {
-                              setDeleteTargetUser(u);
-                              setActiveBookingsWarning(null);
-                            }}
-                            className="p-1.5 rounded-xl text-xs text-rose-400 hover:text-white hover:bg-rose-500/20 border border-rose-500/30 transition"
-                            title="Delete User & Cascaded Events"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      )}
+              <tbody className="divide-y divide-white/5">
+                {users.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-12 text-center text-slate-500">
+                      No accounts matched your criteria.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  users.map((u) => (
+                    <tr key={u._id} className="hover:bg-white/[0.02] transition">
+                      <td className="py-4 px-5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center font-heading font-bold text-purple-400">
+                            {u.name?.charAt(0) || "U"}
+                          </div>
+                          <div>
+                            <div className="font-bold text-white flex items-center gap-2">
+                              <span>{u.name}</span>
+                              {u.role === "admin" && (
+                                <span className="bg-amber-400/20 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-400/30 flex items-center gap-1">
+                                  <Shield className="w-2.5 h-2.5" /> Staff
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs text-slate-400 font-mono">{u.email}</div>
+                            {u.companyName && (
+                              <div className="text-[11px] text-amber-300/80 font-semibold mt-0.5">
+                                {u.companyName}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="py-4 px-5">
+                        <span
+                          className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg border ${
+                            u.role === "admin"
+                              ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                              : u.role === "organiser"
+                              ? "bg-purple-500/10 text-purple-400 border-purple-500/30"
+                              : "bg-blue-500/10 text-blue-400 border-blue-500/30"
+                          }`}
+                        >
+                          {u.role}
+                        </span>
+                      </td>
+
+                      <td className="py-4 px-5">
+                        <button
+                          type="button"
+                          disabled={updatingId === u._id}
+                          onClick={() => handleToggleVerification(u._id, u.isVerified)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition ${
+                            u.isVerified
+                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20"
+                              : "bg-rose-500/10 text-rose-400 border-rose-500/30 hover:bg-rose-500/20"
+                          }`}
+                        >
+                          {u.isVerified ? (
+                            <>
+                              <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                              <span>Verified</span>
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="w-3.5 h-3.5 text-rose-400" />
+                              <span>Unverified</span>
+                            </>
+                          )}
+                        </button>
+                      </td>
+
+                      <td className="py-4 px-5">
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
+                            u.status === "active"
+                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                              : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                          }`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              u.status === "active" ? "bg-emerald-400" : "bg-rose-400"
+                            }`}
+                          />
+                          <span className="capitalize">{u.status || "active"}</span>
+                        </span>
+                      </td>
+
+                      <td className="py-4 px-5 text-slate-400 text-xs">
+                        {u.createdAt ? formatEventDate(u.createdAt, "dd MMM yyyy") : "N/A"}
+                      </td>
+
+                      <td className="py-4 px-5 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            disabled={updatingId === u._id || u.role === "admin"}
+                            onClick={() => handleToggleStatus(u._id, u.status || "active")}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition disabled:opacity-40 ${
+                              u.status === "active"
+                                ? "bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20"
+                                : "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20"
+                            }`}
+                          >
+                            {u.status === "active" ? "Suspend" : "Reactivate"}
+                          </button>
+
+                          {u.role !== "admin" && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setDeleteTargetUser(u);
+                                setActiveBookingsWarning(null);
+                              }}
+                              className="p-1.5 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition"
+                              title="Delete user account"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         )}
       </div>
 
-      {/* Delete User Confirmation Modal */}
+      {/* Create User Modal */}
+      {createModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-6">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                  <UserPlus className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-heading font-bold text-white">Create New Account</h3>
+                  <p className="text-xs text-slate-400">
+                    Add a Guest, Venue Host, or Administrator to CelebrateHub.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCreateModalOpen(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateUser} className="space-y-4">
+              {/* Role Selection */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300">Account Role *</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(["customer", "organiser", "admin"] as const).map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => setNewUserData({ ...newUserData, role: r })}
+                      className={`py-2 px-3 rounded-xl text-xs font-bold capitalize transition border ${
+                        newUserData.role === r
+                          ? "bg-amber-400 text-slate-950 border-amber-400 shadow-md"
+                          : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
+                      }`}
+                    >
+                      {r === "customer" ? "Guest" : r === "organiser" ? "Host" : "Admin"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Full Name */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300">Full Name *</label>
+                <div className="relative">
+                  <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Vikram Singhania"
+                    value={newUserData.name}
+                    onChange={(e) => setNewUserData({ ...newUserData, name: e.target.value })}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white text-xs outline-none focus:border-amber-400 transition"
+                  />
+                </div>
+              </div>
+
+              {/* Email */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300">Email Address *</label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
+                  <input
+                    type="email"
+                    required
+                    placeholder="e.g. host@celebratehub.com"
+                    value={newUserData.email}
+                    onChange={(e) => setNewUserData({ ...newUserData, email: e.target.value })}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white text-xs outline-none focus:border-amber-400 transition"
+                  />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300">Initial Password *</label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    minLength={6}
+                    placeholder="At least 6 characters"
+                    value={newUserData.password}
+                    onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })}
+                    className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white text-xs outline-none focus:border-amber-400 transition"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-2.5 text-slate-400 hover:text-white"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Phone */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300">Phone Number</label>
+                <div className="relative">
+                  <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
+                  <input
+                    type="tel"
+                    placeholder="+91 98765 43210"
+                    value={newUserData.phone}
+                    onChange={(e) => setNewUserData({ ...newUserData, phone: e.target.value })}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white text-xs outline-none focus:border-amber-400 transition"
+                  />
+                </div>
+              </div>
+
+              {/* Company / Brand Name if host */}
+              {newUserData.role === "organiser" && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Venue / Hospitality Brand *</label>
+                  <div className="relative">
+                    <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Skydeck Manor & Banquet"
+                      value={newUserData.companyName}
+                      onChange={(e) => setNewUserData({ ...newUserData, companyName: e.target.value })}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white text-xs outline-none focus:border-amber-400 transition"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Instant Verification Toggle */}
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/10">
+                <div>
+                  <span className="text-xs font-bold text-white block">Pre-Verify Account</span>
+                  <span className="text-[11px] text-slate-400 block">
+                    Allow user to log in immediately without completing email OTP.
+                  </span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={newUserData.isVerified}
+                  onChange={(e) => setNewUserData({ ...newUserData, isVerified: e.target.checked })}
+                  className="w-4 h-4 accent-amber-400 rounded cursor-pointer"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setCreateModalOpen(false)}
+                  disabled={creatingUser}
+                  className="flex-1 py-2.5 rounded-xl border border-white/10 text-slate-300 hover:bg-white/5 text-xs font-bold transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={creatingUser}
+                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 text-xs font-bold shadow-lg shadow-amber-500/20 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {creatingUser ? "Creating..." : "Confirm & Create"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
       {deleteTargetUser && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-5">

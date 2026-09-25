@@ -19,7 +19,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#070A0F] flex items-center justify-center text-slate-400">
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/30 text-amber-400 flex items-center justify-center animate-pulse">
             <Shield className="w-6 h-6" />
@@ -37,7 +37,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-[#080B11] text-slate-100 flex flex-col lg:flex-row antialiased">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col lg:flex-row antialiased">
       <AdminSidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         <AdminHeader />

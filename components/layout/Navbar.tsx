@@ -22,6 +22,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import ReservationTimer from "./ReservationTimer";
+import ThemeToggle from "@/components/common/ThemeToggle";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -80,7 +81,7 @@ export default function Navbar() {
         </div>
       )}
 
-      <header className="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-xl border-b border-white/10 text-white transition-all">
+      <header className="sticky top-0 z-20 bg-slate-950/80 backdrop-blur-xl border-b border-white/10 text-white transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 gap-4">
             {/* Dynamic Brand Logo */}
@@ -135,6 +136,9 @@ export default function Navbar() {
             {/* 10-Minute Reservation Hold Timer */}
             <ReservationTimer />
 
+            {/* Theme Switcher Icon */}
+            <ThemeToggle />
+
             {/* Cart Button */}
             <button
               onClick={openDrawer}
@@ -167,7 +171,7 @@ export default function Navbar() {
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                   className="flex items-center gap-2 p-1 pl-2.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition"
                 >
-                  <span className="text-xs font-semibold text-white max-w-[90px] truncate">
+                  <span className="text-xs font-semibold max-w-[90px] text-foreground truncate">
                     {user.name.split(" ")[0]}
                   </span>
                   <div className="w-7 h-7 rounded-full overflow-hidden bg-purple-600 flex items-center justify-center text-white text-xs font-bold ring-1 ring-white/20">
@@ -188,7 +192,7 @@ export default function Navbar() {
                     />
                     <div className="absolute right-0 mt-2 w-56 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-50 p-2 text-xs space-y-1">
                       <div className="p-2 border-b border-white/10">
-                        <p className="font-bold text-white truncate">{user.name}</p>
+                        <p className="font-bold text-foreground truncate">{user.name}</p>
                         <p className="text-[11px] text-slate-400 truncate">{user.email}</p>
                         <span className="inline-block mt-1 px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 font-semibold text-[10px] uppercase">
                           {user.role}
@@ -394,6 +398,11 @@ export default function Navbar() {
                 </Link>
               </div>
             )}
+
+            <div className="flex items-center justify-between pt-3 border-t border-white/10 px-1">
+              <span className="text-xs text-slate-400 font-semibold">Theme Mode</span>
+              <ThemeToggle showLabel />
+            </div>
           </div>
         </div>
       )}

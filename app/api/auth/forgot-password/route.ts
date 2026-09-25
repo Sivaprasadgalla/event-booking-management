@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { connectToDatabase } from "@/lib/db";
 import { User } from "@/models";
+import { sendPasswordResetEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -50,12 +51,18 @@ export async function POST(req: NextRequest) {
       user.email
     )}`;
 
-    console.log(`[PASSWORD RESET] Generated reset link for ${user.email}: ${resetUrl}`);
+    // Dispatch automated email via Gmail SMTP
+    const emailResult = await sendPasswordResetEmail({
+      toEmail: user.email,
+      name: user.name,
+      resetUrl,
+    });
+
+    console.log(`[PASSWORD RESET] Email dispatched for ${user.email} (mode: ${emailResult.mode})`);
 
     return NextResponse.json({
       success: true,
-      message: "Password reset link generated successfully.",
-      resetUrl,
+      message: `A password reset link has been dispatched to ${user.email}. Please check your inbox and follow the instructions.`,
       expiresInMinutes: 60,
     });
   } catch (error: any) {
