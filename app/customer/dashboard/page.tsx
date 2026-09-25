@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 
 export default function CustomerDashboardPage() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
 
   const [bookings, setBookings] = useState<any[]>([]);
@@ -32,14 +32,20 @@ export default function CustomerDashboardPage() {
   const [activeQrModal, setActiveQrModal] = useState<any | null>(null);
 
   useEffect(() => {
-    fetch("/api/customer/bookings")
-      .then((res) => res.json())
-      .then((data) => {
-        setBookings(data.bookings || []);
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+    if (!isLoading && !user) {
+      router.push("/login?returnUrl=/customer/dashboard");
+      return;
+    }
+    if (user) {
+      fetch("/api/customer/bookings")
+        .then((res) => res.json())
+        .then((data) => {
+          setBookings(data.bookings || []);
+        })
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    }
+  }, [user, isLoading, router]);
 
   const upcomingBookings = bookings.filter(
     (b) => b.status === "confirmed" && new Date(b.bookingDate) >= new Date()

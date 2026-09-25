@@ -54,7 +54,6 @@ export default function EventDetailPage() {
     endTime: string;
   } | null>(null);
   const [selectedAddOns, setSelectedAddOns] = useState<Record<string, number>>({});
-  const [bookingNotice, setBookingNotice] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -188,12 +187,10 @@ export default function EventDetailPage() {
       return;
     }
 
-    setBookingNotice(true);
     toast.success(
       `"${event.title}" locked in your cart for 10 minutes!`,
       "Shift Reserved"
     );
-    setTimeout(() => setBookingNotice(false), 3000);
 
     if (instantCheckout) {
       router.push("/checkout");
@@ -607,13 +604,6 @@ export default function EventDetailPage() {
                 Book Now
               </button>
             </div>
-
-            {bookingNotice && (
-              <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 rounded-xl text-xs flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Added to cart successfully!</span>
-              </div>
-            )}
 
             {(event.contactInfo?.phone || event.organiser?.phone) && (
               <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs text-slate-400">

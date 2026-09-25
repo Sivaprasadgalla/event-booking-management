@@ -39,6 +39,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (!user.isVerified) {
+      return NextResponse.json(
+        {
+          error: "Your email address has not been verified yet. Please enter the verification code sent to your inbox.",
+          unverified: true,
+          email: user.email,
+        },
+        { status: 403 }
+      );
+    }
+
     const sessionPayload = {
       id: user._id.toString(),
       email: user.email,

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 import { formatPrice, formatEventDate } from "@/lib/utils";
 import {
   Printer,
@@ -21,13 +22,18 @@ import {
 export default function CustomerInvoicePage() {
   const { bookingId } = useParams();
   const router = useRouter();
+  const { user, isLoading } = useAuth();
 
   const [invoiceData, setInvoiceData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!bookingId) return;
+    if (!isLoading && !user) {
+      router.push(`/login?returnUrl=/customer/invoices/${bookingId}`);
+      return;
+    }
+    if (!bookingId || !user) return;
 
     fetch(`/api/customer/invoices/${bookingId}`)
       .then(async (res) => {
@@ -42,7 +48,7 @@ export default function CustomerInvoicePage() {
         setError(err.message || "Failed to retrieve invoice details");
       })
       .finally(() => setLoading(false));
-  }, [bookingId]);
+  }, [bookingId, user, isLoading, router]);
 
   const handlePrint = () => {
     window.print();

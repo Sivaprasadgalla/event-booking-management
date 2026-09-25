@@ -77,7 +77,6 @@ export default function CreateEventWizardPage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
 
@@ -423,20 +422,17 @@ export default function CreateEventWizardPage() {
   const handleSubmit = async (submitForApproval = true) => {
     if (!formData.title || !formData.shortDescription || !formData.category) {
       const msg = "Please complete all required fields (Venue Title, Category, and Summary).";
-      setErrorMessage(msg);
       toast.warning(msg, "Missing Information");
       return;
     }
 
     if (formData.dailyTimeSlots.length === 0) {
       const msg = "Please configure at least one daily time slot / shift for host celebrations.";
-      setErrorMessage(msg);
       toast.warning(msg, "Time Slots Required");
       return;
     }
 
     setSubmitting(true);
-    setErrorMessage("");
 
     try {
       // Parse multi-line textarea terms into array
@@ -472,7 +468,6 @@ export default function CreateEventWizardPage() {
       router.push("/organiser/dashboard");
     } catch (err: any) {
       const msg = err.message || "Failed to create event";
-      setErrorMessage(msg);
       toast.error(msg, "Submission Failed");
       setSubmitting(false);
     }
@@ -521,13 +516,6 @@ export default function CreateEventWizardPage() {
             </button>
           ))}
         </div>
-
-        {errorMessage && (
-          <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2.5">
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-            <span>{errorMessage}</span>
-          </div>
-        )}
 
         {/* Step 1: Venue & Occasions */}
         {currentStep === 1 && (

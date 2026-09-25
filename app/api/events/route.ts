@@ -161,7 +161,7 @@ export async function POST(req: NextRequest) {
     const newEvent = await Event.create({
       title: data.title,
       slug,
-      organiser: user.id,
+      organiser: user.role === "admin" && data.organiserId ? data.organiserId : user.id,
       category: data.category,
       shortDescription: data.shortDescription,
       fullDescription: data.fullDescription || data.shortDescription,
@@ -231,8 +231,8 @@ export async function POST(req: NextRequest) {
         refundPercentage: 80,
       },
       policyText: data.policyText || "",
-      status: data.submitForApproval ? "pending_approval" : "draft",
-      isFeatured: false,
+      status: user.role === "admin" && data.status ? data.status : (data.submitForApproval ? "pending_approval" : "draft"),
+      isFeatured: user.role === "admin" && data.isFeatured !== undefined ? Boolean(data.isFeatured) : false,
     });
 
     return NextResponse.json({

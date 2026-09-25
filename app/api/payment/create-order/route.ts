@@ -86,13 +86,20 @@ export async function POST(req: NextRequest) {
     const taxAmount = Math.round(((subtotal + platformFee) * taxPct) / 100);
     const totalAmount = subtotal + platformFee + taxAmount;
 
-    const orderNumber = generateOrderNumber();
     const user = getUserFromRequest(req);
+    if (!user) {
+      return NextResponse.json(
+        { error: "Authentication required: Please sign in to complete your reservation" },
+        { status: 401 }
+      );
+    }
+
+    const orderNumber = generateOrderNumber();
 
     // Create pending order
     const pendingOrder = await Order.create({
       orderNumber,
-      customer: user ? user.id : undefined,
+      customer: user.id,
       bookings: [],
       subtotal,
       platformFee,

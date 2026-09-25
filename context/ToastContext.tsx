@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2, AlertCircle, AlertTriangle, Info, X } from "lucide-react";
 
@@ -99,17 +100,28 @@ function ToastContainer({
   toasts: ToastItem[];
   onDismiss: (id: string) => void;
 }) {
-  return (
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || typeof document === "undefined") {
+    return null;
+  }
+
+  return createPortal(
     <div
       aria-live="assertive"
-      className="fixed top-4 right-4 sm:top-6 sm:right-6 z-[99999] flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-3 sm:px-0"
+      className="fixed top-20 sm:top-24 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-[9999999] flex flex-col gap-2.5 pointer-events-none"
     >
       <AnimatePresence mode="popLayout">
         {toasts.map((t) => (
           <ToastCard key={t.id} toast={t} onDismiss={() => onDismiss(t.id)} />
         ))}
       </AnimatePresence>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -144,11 +156,11 @@ function ToastCard({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: -20, scale: 0.92 }}
+      initial={{ opacity: 0, y: -16, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9, y: -10, transition: { duration: 0.2 } }}
+      exit={{ opacity: 0, scale: 0.92, y: -10, transition: { duration: 0.2 } }}
       transition={{ type: "spring", stiffness: 450, damping: 30 }}
-      className={`pointer-events-auto relative overflow-hidden rounded-2xl p-4 shadow-2xl backdrop-blur-xl border transition-colors ${bgBorderColor}`}
+      className={`pointer-events-auto relative overflow-hidden rounded-2xl p-4 shadow-2xl backdrop-blur-2xl border transition-colors ${bgBorderColor}`}
     >
       <div className="flex items-start gap-3">
         {/* Icon */}
@@ -182,7 +194,7 @@ function ToastCard({
               {toast.title}
             </p>
           )}
-          <p className="text-xs sm:text-sm font-medium text-slate-100 leading-snug">
+          <p className="text-xs sm:text-sm font-medium text-slate-100 leading-snug break-words">
             {toast.message}
           </p>
         </div>

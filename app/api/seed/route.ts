@@ -1,18 +1,21 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { seedDatabase } from "@/lib/seedData";
+import { getUserFromRequest } from "@/lib/auth";
 
-export async function POST() {
+export const dynamic = "force-dynamic";
+
+export async function POST(req: NextRequest) {
   try {
+    const user = getUserFromRequest(req);
+    if (!user || user.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized: Admin access required" }, { status: 403 });
+    }
+
     const result = await seedDatabase();
     return NextResponse.json({
       success: true,
-      message: "Database successfully seeded with realistic demo data!",
+      message: "Database marketplace content synchronized successfully.",
       stats: result,
-      demoAccounts: {
-        admin: { email: "admin@eventhub.com", password: "password123" },
-        organiser: { email: "organiser@eventhub.com", password: "password123" },
-        customer: { email: "customer@eventhub.com", password: "password123" },
-      },
     });
   } catch (error: any) {
     console.error("Seed error:", error);
@@ -26,6 +29,3 @@ export async function POST() {
   }
 }
 
-export async function GET() {
-  return POST();
-}

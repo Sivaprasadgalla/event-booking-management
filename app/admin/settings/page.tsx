@@ -3,10 +3,12 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 import { Settings, Save, CheckCircle, AlertCircle } from "lucide-react";
 
 export default function AdminSettingsPage() {
   const { user, isLoading } = useAuth();
+  const { toast } = useToast();
   const router = useRouter();
 
   const [settings, setSettings] = useState({
@@ -20,7 +22,6 @@ export default function AdminSettingsPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [savedSuccess, setSavedSuccess] = useState(false);
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== "admin")) {
@@ -50,11 +51,13 @@ export default function AdminSettingsPage() {
       });
 
       if (res.ok) {
-        setSavedSuccess(true);
-        setTimeout(() => setSavedSuccess(false), 3000);
+        toast.success("Platform settings updated successfully!", "Settings Saved");
+      } else {
+        toast.error("Failed to update platform settings.", "Update Error");
       }
     } catch (e) {
       console.error(e);
+      toast.error("An error occurred while saving settings.");
     } finally {
       setSaving(false);
     }
@@ -137,15 +140,7 @@ export default function AdminSettingsPage() {
           </div>
         </div>
 
-        <div className="pt-4 border-t border-white/10 flex items-center justify-between">
-          {savedSuccess ? (
-            <span className="text-sm text-emerald-400 font-bold flex items-center gap-1.5">
-              <CheckCircle className="w-4 h-4" /> Settings updated successfully!
-            </span>
-          ) : (
-            <div />
-          )}
-
+        <div className="pt-4 border-t border-white/10 flex items-center justify-end">
           <button
             type="submit"
             disabled={saving}

@@ -65,8 +65,7 @@ export async function POST(req: NextRequest) {
       success: true,
       requiresVerification: true,
       email: cleanEmail,
-      message: `Account created! We've sent a verification code to ${cleanEmail}. Please verify your Gmail.`,
-      demoCode: process.env.NODE_ENV !== "production" ? verificationCode : undefined,
+      message: `Account created! We've sent a 6-digit verification code to ${cleanEmail}. Please verify your email to activate your account.`,
     });
   } catch (error: any) {
     console.error("Registration error:", error);

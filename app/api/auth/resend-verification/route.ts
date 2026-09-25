@@ -51,7 +51,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       message: `Verification code sent to ${user.email}`,
-      demoCode: process.env.NODE_ENV !== "production" ? code : undefined,
     });
   } catch (error: any) {
     console.error("Resend verification error:", error);

@@ -14,12 +14,17 @@ export interface UserSession {
   isVerified?: boolean;
 }
 
+export interface LoginResult {
+  success: boolean;
+  unverified?: boolean;
+  error?: string;
+}
+
 interface AuthContextType {
   user: UserSession | null;
   isLoading: boolean;
-  login: (email: string, password?: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<LoginResult>;
   logout: () => Promise<void>;
-  switchRole: (role: "customer" | "organiser" | "admin") => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
@@ -50,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshUser();
   }, []);
 
-  const login = async (email: string, password = "password123"): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<LoginResult> => {
     try {
       setIsLoading(true);
       const res = await fetch("/api/auth/login", {
@@ -59,15 +64,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ email, password }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
+      const data = await res.json();
+
+      if (res.ok && data.success) {
         setUser(data.user);
         router.refresh();
-        return true;
+        return { success: true };
       }
-      return false;
-    } catch {
-      return false;
+
+      if (res.status === 403 && data.unverified) {
+        return { success: false, unverified: true, error: data.error };
+      }
+
+      return { success: false, error: data.error || "Invalid email or password" };
+    } catch (err: any) {
+      return { success: false, error: err.message || "Failed to log in" };
     } finally {
       setIsLoading(false);
     }
@@ -84,38 +95,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const switchRole = async (role: "customer" | "organiser" | "admin") => {
-    try {
-      setIsLoading(true);
-      const res = await fetch("/api/auth/demo-login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data.user);
-
-        // Smart redirect to respective portal
-        if (role === "admin") {
-          router.push("/admin/dashboard");
-        } else if (role === "organiser") {
-          router.push("/organiser/dashboard");
-        } else {
-          router.push("/customer/bookings");
-        }
-        router.refresh();
-      }
-    } catch (e) {
-      console.error("Failed to switch role:", e);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, switchRole, refreshUser }}>
+    <AuthContext.Provider value={{ user, isLoading, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
@@ -128,3 +109,4 @@ export function useAuth() {
   }
   return context;
 }
+

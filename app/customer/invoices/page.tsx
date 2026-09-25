@@ -2,22 +2,32 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import { formatPrice, formatEventDate } from "@/lib/utils";
 import { FileText, ArrowRight, Download, Calendar, CheckCircle } from "lucide-react";
 
 export default function CustomerInvoicesPage() {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/customer/bookings")
-      .then((res) => res.json())
-      .then((data) => {
-        setBookings(data.bookings || []);
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+    if (!isLoading && !user) {
+      router.push("/login?returnUrl=/customer/invoices");
+      return;
+    }
+    if (user) {
+      fetch("/api/customer/bookings")
+        .then((res) => res.json())
+        .then((data) => {
+          setBookings(data.bookings || []);
+        })
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    }
+  }, [user, isLoading, router]);
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">

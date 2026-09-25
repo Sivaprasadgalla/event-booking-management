@@ -24,7 +24,7 @@ import {
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, switchRole } = useAuth();
+  const { login } = useAuth();
   const { toast } = useToast();
 
   const returnUrl = searchParams.get("returnUrl") || "/";
@@ -33,46 +33,32 @@ function LoginContent() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
 
     try {
-      const success = await login(email, password);
-      if (success) {
+      const res = await login(email, password);
+      if (res.success) {
         toast.success("Welcome back! Signed in successfully.", "Signed In");
         router.push(returnUrl);
+      } else if (res.unverified) {
+        toast.warning(
+          res.error || "Please verify your email before logging in.",
+          "Verification Required"
+        );
+        router.push(`/verify-email?email=${encodeURIComponent(email)}`);
       } else {
-        const msg = "Invalid email or password. Please verify your credentials.";
-        setError(msg);
-        toast.error(msg, "Authentication Failed");
+        toast.error(res.error || "Invalid email or password. Please verify your credentials.", "Authentication Failed");
       }
     } catch {
-      const msg = "An unexpected network error occurred.";
-      setError(msg);
-      toast.error(msg, "Login Error");
+      toast.error("An unexpected network error occurred.", "Login Error");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDemoSignIn = async (role: "customer" | "organiser" | "admin") => {
-    setLoading(true);
-    try {
-      await switchRole(role);
-      toast.success(`Switched to ${role.toUpperCase()} profile!`);
-      if (returnUrl && returnUrl !== "/") {
-        router.push(returnUrl);
-      }
-    } catch {
-      toast.error("Demo login failed");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-stretch bg-slate-950 text-slate-100">
@@ -169,13 +155,6 @@ function LoginContent() {
             </p>
           </div>
 
-          {error && (
-            <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-300 rounded-2xl text-xs sm:text-sm flex items-start gap-3">
-              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-              <span>{error}</span>
-            </div>
-          )}
-
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-300">Email Address</label>
@@ -232,41 +211,6 @@ function LoginContent() {
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
-
-          {/* Quick Demo Login Pills */}
-          <div className="pt-4 border-t border-white/10 space-y-2.5">
-            <div className="text-center">
-              <span className="text-[11px] uppercase tracking-wider font-bold text-slate-400">
-                Or Quick Test with 1-Click Demo
-              </span>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => handleDemoSignIn("customer")}
-                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-bold text-purple-300 flex flex-col items-center gap-1 transition"
-              >
-                <Ticket className="w-3.5 h-3.5" />
-                <span>Customer</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDemoSignIn("organiser")}
-                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-bold text-pink-300 flex flex-col items-center gap-1 transition"
-              >
-                <Building2 className="w-3.5 h-3.5" />
-                <span>Host Partner</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDemoSignIn("admin")}
-                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-bold text-amber-300 flex flex-col items-center gap-1 transition"
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Admin</span>
-              </button>
-            </div>
-          </div>
 
           {/* Bottom link */}
           <div className="text-center pt-2">
