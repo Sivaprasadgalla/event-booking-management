@@ -1,5 +1,42 @@
 import nodemailer from "nodemailer";
 
+export interface EmailLogEntry {
+  id: string;
+  timestamp: string;
+  toEmail: string;
+  name?: string;
+  subject: string;
+  code?: string;
+  verifyUrl?: string;
+  mode: "smtp" | "simulation";
+  status: "sent" | "failed" | "simulated";
+  error?: string;
+}
+
+// Preserve email logs in globalThis across Next.js hot-reloads
+const globalForEmail = globalThis as unknown as {
+  emailLogs?: EmailLogEntry[];
+};
+
+export const emailLogs: EmailLogEntry[] = globalForEmail.emailLogs || [];
+if (process.env.NODE_ENV !== "production") {
+  globalForEmail.emailLogs = emailLogs;
+}
+
+export function getEmailLogs(): EmailLogEntry[] {
+  return [...emailLogs].slice(-30).reverse(); // Return latest 30 logs (newest first)
+}
+
+export function clearEmailLogs(): void {
+  emailLogs.length = 0;
+}
+
+export function isSmtpConfigured(): boolean {
+  const user = process.env.SMTP_USER || process.env.GMAIL_USER;
+  const pass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD;
+  return Boolean(user && pass);
+}
+
 interface SendVerificationEmailParams {
   toEmail: string;
   name: string;
@@ -56,13 +93,19 @@ export async function sendVerificationEmail({
     </html>
   `;
 
+  const logId = Math.random().toString(36).substring(2, 9);
+  const now = new Date().toISOString();
+
+  // If SMTP credentials are provided, attempt real email transmission
   if (host && user && pass) {
     try {
+      console.log(`[EMAIL] Attempting real SMTP transmission via ${host}:${port} to ${toEmail}...`);
       const transporter = nodemailer.createTransport({
         host,
         port,
         secure: port === 465,
         auth: { user, pass },
+        tls: { rejectUnauthorized: false }, // Avoid self-signed cert rejections in dev
       });
 
       await transporter.sendMail({
@@ -72,20 +115,71 @@ export async function sendVerificationEmail({
         html: htmlContent,
       });
 
-      console.log(`[EMAIL] Verification email sent via SMTP to ${toEmail}`);
+      console.log(`\n=======================================================`);
+      console.log(`✅ [EMAIL SENT SUCCESSFULLY VIA SMTP]`);
+      console.log(`🎯 Recipient: ${toEmail}`);
+      console.log(`🔑 Verification Code (OTP): [ ${code} ]`);
+      console.log(`🔗 Direct Link: ${verifyUrl}`);
+      console.log(`📮 Sent from: ${user} via ${host}`);
+      console.log(`=======================================================\n`);
+
+      emailLogs.push({
+        id: logId,
+        timestamp: now,
+        toEmail,
+        name,
+        subject: `Your CelebrateHub Verification Code: ${code}`,
+        code,
+        verifyUrl,
+        mode: "smtp",
+        status: "sent",
+      });
+
       return { sent: true, mode: "smtp" };
     } catch (err: any) {
-      console.warn(`[EMAIL] SMTP failed (${err.message}). Falling back to simulation mode.`);
+      console.error(`\n❌ [EMAIL SMTP FAILURE] Error sending to ${toEmail}:`, err.message);
+      console.warn(`Falling back to Simulation Mode so verification flow is NOT blocked.\n`);
+
+      emailLogs.push({
+        id: logId,
+        timestamp: now,
+        toEmail,
+        name,
+        subject: `Your CelebrateHub Verification Code: ${code}`,
+        code,
+        verifyUrl,
+        mode: "smtp",
+        status: "failed",
+        error: err.message,
+      });
+
+      // Continue to output simulation banner below so developers/testers are not locked out
     }
   }
 
-  // Simulation mode (logs directly to console for instant developer/tester verification)
-  console.log(`=======================================================`);
-  console.log(`[EMAIL VERIFICATION DISPATCHED]`);
-  console.log(`To: ${toEmail}`);
-  console.log(`Verification Code (OTP): ${code}`);
-  console.log(`Direct Verification URL: ${verifyUrl}`);
-  console.log(`=======================================================`);
+  // Simulation Mode (Outputs formatted banner to console for instant developer verification)
+  console.log(`\n=======================================================`);
+  console.log(`📧 [EMAIL VERIFICATION DISPATCHED - SIMULATION MODE]`);
+  console.log(`📅 Timestamp: ${now}`);
+  console.log(`🎯 Recipient (To): ${toEmail}`);
+  console.log(`👤 Name: ${name || "Guest"}`);
+  console.log(`🔑 VERIFICATION CODE (OTP): [ ${code} ]`);
+  console.log(`🔗 DIRECT VERIFY LINK: ${verifyUrl}`);
+  console.log(`⚠️  Mode: SIMULATION (Configure SMTP_USER & SMTP_PASS in .env.local to send live emails)`);
+  console.log(`=======================================================\n`);
+
+  emailLogs.push({
+    id: logId,
+    timestamp: now,
+    toEmail,
+    name,
+    subject: `Your CelebrateHub Verification Code: ${code}`,
+    code,
+    verifyUrl,
+    mode: "simulation",
+    status: "simulated",
+  });
 
   return { sent: true, mode: "simulation" };
 }
+
