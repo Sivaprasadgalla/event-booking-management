@@ -32,8 +32,8 @@ export function clearEmailLogs(): void {
 }
 
 export function isSmtpConfigured(): boolean {
-  const user = process.env.SMTP_USER || process.env.GMAIL_USER;
-  const pass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
   return Boolean(user && pass);
 }
 
@@ -50,10 +50,10 @@ export async function sendVerificationEmail({
   code,
   verifyUrl,
 }: SendVerificationEmailParams): Promise<{ sent: boolean; mode: "smtp" | "simulation"; error?: string }> {
-  const host = process.env.SMTP_HOST || (process.env.GMAIL_USER ? "smtp.gmail.com" : null);
-  const user = process.env.SMTP_USER || process.env.GMAIL_USER;
-  const pass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD;
-  const port = Number(process.env.SMTP_PORT) || 465;
+  const host = process.env.SMTP_HOST || "smtp.gmail.com";
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  const port = 465;
 
   const htmlContent = `
     <!DOCTYPE html>
